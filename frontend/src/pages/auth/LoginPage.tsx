@@ -3,8 +3,6 @@ import { useState } from "react";
 function LoginPage() {
   const [identifier, setIdentifier] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
-  
   
   return (
     <div className="min-h-screen min-w-screen flex flex-row justify-center items-center">
