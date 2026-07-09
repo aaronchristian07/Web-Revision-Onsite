@@ -2,7 +2,9 @@ import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
+import AuthLayout from "./pages/auth/AuthLayout";
 
+// router.tsx
 const router = createBrowserRouter([
   {
 	  // automatically navigate to auth/login
@@ -10,11 +12,24 @@ const router = createBrowserRouter([
     element: <Navigate to="/auth/login" replace />,
   },
   {
-	path: "/auth",
+	  // always use AuthLayout if URL begins with "/auth"
+    path: "/auth",
+    element: <AuthLayout/>,  // --> parent element
     children: [  // insert child element into parent's <Outlet />
       {
         path: "login",
         element: <LoginPage />  // --> child element
+      },
+    ]
+  },
+  {
+	  // always use AuthLayout if URL begins with "/auth"
+    path: "/auth",
+    element: <AuthLayout/>,  // --> parent element
+    children: [  // insert child element into parent's <Outlet />
+      {
+        path: "register",
+        element: <RegisterPage />  // --> child element
       },
     ]
   },
