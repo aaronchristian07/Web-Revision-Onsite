@@ -73,7 +73,7 @@ services:
 
   auth-services:
     container_name: onsite-auth
-    image: onsite/auth-service:local
+    image: auth-service:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
