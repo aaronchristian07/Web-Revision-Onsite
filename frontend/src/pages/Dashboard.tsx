@@ -3,7 +3,16 @@ import { useState } from "react";
 
 function Dashboard() {
     const [tab, setTab] = useState<number>(0);
-    console.log(tab)  // todo: use to display certain page section
+
+    const TAB_THEMES = {
+        disabled: "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group",
+        enabled: "flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group",
+    }
+
+    const selectTabTheme = (localTab: number) => {
+        if (tab == localTab) return TAB_THEMES["enabled"]
+        else return TAB_THEMES["disabled"]
+    }
 
     return(
         <div>
@@ -28,7 +37,7 @@ function Dashboard() {
                         
                         <div
                             onClick={() => setTab(0)}>
-                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
+                            <a className={selectTabTheme(0)}>
                                 <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
                                 Shop
                             </a>
@@ -36,7 +45,7 @@ function Dashboard() {
                         
                         <div
                             onClick={() => setTab(1)}>
-                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                            <a className={selectTabTheme(1)}>
                                 <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
                                 Cart
                                 <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
@@ -45,7 +54,7 @@ function Dashboard() {
                         
                         <div
                             onClick={() => setTab(2)}>
-                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                            <a className={selectTabTheme(2)}>
                                 <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
                                 History
                             </a>
