@@ -6,6 +6,7 @@ import Cart from "./pages/Cart";
 import History from "./pages/History";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/Profile";
+import Layout from "./components/Layout";
 
 // router.tsx
 const router = createBrowserRouter([
@@ -24,33 +25,35 @@ const router = createBrowserRouter([
         path: "register",
         element: <RegisterPage />  // --> child element
       },
-      {
-        path: "dashboard",
-        element: <Dashboard />  // --> child element
-      },
-      {
-        path: "cart",
-        element: <Cart />  // --> child element
-      },
-      {
-        path: "history",
-        element: <History />  // --> child element
-      },
-      {
-        path: "profile",
-        element: <ProfilePage />  // --> child element
-      },
     ]
   },
   {
-    // for every URL, go to ProtectedRoute (ex: /dashboard, /profile)
-    // SET THIS BLOCK AFTER AUTH so that auth does not use ProtectedRoute
     element: <ProtectedRoute />,
-    children: [
-      {
-        path: "dashboard",
-        element: <Dashboard />  // --> child element
-      }
+    children: [{
+      element: <Layout />,
+      children: [
+        {
+          path: "dashboard",
+          element: <Dashboard />  // --> child element
+        },
+        {
+          path: "dashboard",
+          element: <Dashboard />  // --> child element
+        },
+        {
+          path: "cart",
+          element: <Cart />  // --> child element
+        },
+        {
+          path: "history",
+          element: <History />  // --> child element
+        },
+        {
+          path: "profile",
+          element: <ProfilePage />  // --> child element
+        },
+      ]
+    }
     ]
   },
 ]);
