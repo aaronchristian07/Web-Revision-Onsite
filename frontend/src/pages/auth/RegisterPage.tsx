@@ -1,40 +1,118 @@
+import { useState } from "react";
 import { useNavigate } from "react-router"
 
 function RegisterPage() {
     const navigate = useNavigate();
+    
+    const [username, setUsername] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [confirmPassword, setConfirmPassword] = useState<string>("");
+    const [error, setError] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+
+
     const switchPage = () => {
         navigate("/auth/login")
     }
 
+    const validateInputs = (): boolean => {
+        if (username == "" || username.length < 5 || username.length > 30) {
+            setError("Username must be between 5 and 30 characters")
+            return false;
+        }
+        if (!email.includes('@') || email == "") {
+            setError("Invalid email address")
+            return false;
+        }
+        if (password == "" || password.length < 5 || password.length > 30) {
+            setError("Password must be between 5 and 30 characters")
+            return false;
+        }
+        if (password !== confirmPassword) {
+            setError("Passwords aren't the same")
+            return false;
+        }
+
+        return true;
+    }
+
+    const handleSubmit = () => {
+        if (loading) return;
+        setLoading(true)
+        setError("")
+        try {
+        if (!validateInputs()) return;
+
+        // todo: register api
+
+        navigate("/dashboard")
+
+        } finally {
+        setLoading(false)
+        }
+    }
+
     return (
         <div className="min-h-screen min-w-screen flex flex-row justify-center items-center">
-            <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
+            <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0 w-full">
             <div className="w-full bg-white rounded-lg shadow border md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
                 <p className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
                 Create an account
+                </p>
                 
-                
-                </p><div>
+                <div>
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                     Your username
                     </label>
-                    <input placeholder="JohnDoe" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" id="username" type="text" />
+                    <input
+                        placeholder="JohnDoe"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Email address
+                    </label>
+                    <input
+                        placeholder="apple@juice.com"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
                 </div>
                 <div>
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                     Password
                     </label>
-                    <input className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" placeholder="••••••••" id="password" type="password" />
+                    <input
+                        className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" id="password" type="password"
+                        value={password}
+                        onChange={(e)=>setPassword(e.target.value)}
+                    />
                 </div>
                 <div>
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                     Confirm password
                     </label>
-                    <input className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" placeholder="••••••••" id="confirmPassword" type="password" />
+                    <input
+                        className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" id="password" type="password"
+                        value={confirmPassword}
+                        onChange={(e)=>setConfirmPassword(e.target.value)}
+                    />
                 </div>
 
-                <button className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white" type="submit">
+                <button
+                    className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white"
+                    onClick={handleSubmit}
+                >
                     Create an account
                 </button>
 
@@ -47,6 +125,9 @@ function RegisterPage() {
                 
             </div>
             </div>
+                {error !== "" &&
+                    <p className="mt-8 font-serif text-red-500 text-md">{error}</p>
+                }
             </div>
         </div>
     )
