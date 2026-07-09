@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	DBString   string
 	DBUser     string
 	DBPass     string
 	DBName     string
@@ -27,6 +28,7 @@ func Load() Config {
 	}
 
 	return Config{
+		DBString:   MustEnv("DB_STRING"),
 		DBUser:     MustEnv("POSTGRES_USER"),
 		DBPass:     MustEnv("POSTGRES_PASSWORD"),
 		DBName:     MustEnv("POSTGRES_DB"),

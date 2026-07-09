@@ -2,23 +2,22 @@ package cmd
 
 import (
 	"log"
-	"strconv"
 	"time"
 
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/config"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/repository"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"honnef.co/go/tools/config"
 )
 
 func main() {
 	config := config.Load()
 
-	smtpPortInt, err := strconv.Atoi(config.SMTPPort)
-
-	if err != nil {
-		log.Fatalf("failed to convert SMPT_PORT to int: %s", err)
-	}
+	// for email
+	// smtpPortInt, err := strconv.Atoi(config.SMTPPort)
+	// if err != nil {
+	// 	log.Fatalf("failed to convert SMPT_PORT to int: %s", err)
+	// }
 
 	db, err := gorm.Open(postgres.Open(config.DBString))
 	if err != nil {
@@ -35,10 +34,12 @@ func main() {
 	})
 
 	userRepo := repository.NewUserRepo(db)
-	otpRepo := cache.NewRedisOTPStore(clusterClient)
-	tokenBlacklist := cache.NewRedisTokenBlacklist(clusterClient)
-	refreshStore := cache.NewRedisRefreshStore(clusterClient)
 
-	authUseCase := usecase.NewAuthUseCase(userRepo, otpRepo, tokenBlacklist, refreshStore, config)
-	authHandler := http.NewAuthHandler(autUseCase)
+	// no need otp, etc. find another use for redis
+	// otpRepo := cache.NewRedisOTPStore(clusterClient)
+	// tokenBlacklist := cache.NewRedisTokenBlacklist(clusterClient)
+	// refreshStore := cache.NewRedisRefreshStore(clusterClient)
+
+	// authUseCase := usecase.NewAuthUseCase(userRepo, otpRepo, tokenBlacklist, refreshStore, config)
+	// authHandler := http.NewAuthHandler(authUseCase)
 }
