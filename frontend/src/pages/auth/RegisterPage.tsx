@@ -1,4 +1,11 @@
+import { useNavigate } from "react-router"
+
 function RegisterPage() {
+    const navigate = useNavigate();
+    const switchPage = () => {
+        navigate("/auth/login")
+    }
+
     return (
         <div className="min-h-screen min-w-screen flex flex-row justify-center items-center">
             <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
@@ -30,6 +37,13 @@ function RegisterPage() {
                 <button className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white" type="submit">
                     Create an account
                 </button>
+
+                <div className="text-sm text-center mt-[1.6rem]">Already have an account?
+                <a
+                    className="text-sm text-[#7747ff]"
+                    onClick={switchPage}
+                >Sign in!</a>
+                </div>
                 
             </div>
             </div>

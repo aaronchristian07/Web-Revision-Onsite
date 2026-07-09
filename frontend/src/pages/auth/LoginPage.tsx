@@ -21,6 +21,10 @@ function LoginPage() {
     return true;
   }
 
+  const switchPage = () =>[
+    navigate("/auth/register")
+  ]
+
   const handleSubmit = () => {
     if (loading) return;
     setLoading(true)
@@ -65,7 +69,7 @@ function LoginPage() {
             />
             </div>
             <div>
-            <a className="text-sm text-[#7747ff]" href="#">Forgot your password?
+            <a className="text-sm text-[#7747ff]">Forgot your password?
             </a></div>
             <button
               className="bg-[#7747ff] w-max m-auto px-6 py-2 rounded text-white text-sm font-normal"
@@ -73,7 +77,12 @@ function LoginPage() {
             >Submit</button>
 
         </div>
-        <div className="text-sm text-center mt-[1.6rem]">Don’t have an account yet? <a className="text-sm text-[#7747ff]" href="#">Sign up for free!</a></div>
+        <div className="text-sm text-center mt-[1.6rem]">Don’t have an account yet?
+          <a
+            className="text-sm text-[#7747ff]"
+            onClick={switchPage}
+          >Sign up for free!</a>
+        </div>
       </div>
 
       {error !== "" &&
