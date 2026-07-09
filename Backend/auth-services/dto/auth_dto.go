@@ -23,9 +23,13 @@ type AuthResponse struct {
 	Role         string `json:"role"`
 }
 
-type ValidateTokenRequest struct {
+type ValidateTokenResponse struct {
 	Valid  string `json;"valid"`
 	Token  string `json:"token"`
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
+}
+
+type MessageResponse struct {
+	Message string `json:"message"`
 }

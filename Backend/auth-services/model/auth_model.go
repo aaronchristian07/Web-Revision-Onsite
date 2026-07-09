@@ -13,4 +13,5 @@ type RefreshToken struct {
 	UserID string `gorm:"uniqueIndex;not null"`
 	Email  string `gorm:"uniqueIndex;not null"`
 	Role   string `gorm:"not null"`
+	Token  string `gorm:"uniqueIndex;not null"`
 }
