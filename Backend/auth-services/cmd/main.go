@@ -1,11 +1,13 @@
-package cmd
+package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/config"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/handler/http"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/repository"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/service"
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,22 +26,26 @@ func main() {
 		log.Fatalf("failed to connect to db: %s", err)
 	}
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:         config.RedisAddr,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolSize:     10,
-		PoolTimeout:  30 * time.Second,
-	})
-
-	userRepo := repository.NewUserRepo(db)
-
+	// rdb := redis.NewClient(&redis.Options{
+	// 	Addr:         config.RedisAddr,
+	// 	DialTimeout:  10 * time.Second,
+	// 	ReadTimeout:  30 * time.Second,
+	// 	WriteTimeout: 30 * time.Second,
+	// 	PoolSize:     10,
+	// 	PoolTimeout:  30 * time.Second,
+	// })
 	// no need otp, etc. find another use for redis
 	// otpRepo := cache.NewRedisOTPStore(clusterClient)
 	// tokenBlacklist := cache.NewRedisTokenBlacklist(clusterClient)
 	// refreshStore := cache.NewRedisRefreshStore(clusterClient)
 
-	// authUseCase := usecase.NewAuthUseCase(userRepo, otpRepo, tokenBlacklist, refreshStore, config)
-	// authHandler := http.NewAuthHandler(authUseCase)
+	authRepo := repository.NewAuthRepo(db)
+	authService := service.NewAuthService(authRepo, config.JWTSecret)
+	authUsecase := http.NewAuthUsecase(authService)
+
+	router := gin.Default()
+	authGroup := router.Group("/auth")
+	{
+		authGroup.POST("", authUsecase.Register)
+	}
 }
