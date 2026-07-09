@@ -2,7 +2,9 @@ import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
-import Dashboard from "./pages/auth/Dashboard";
+import Shop from "./pages/auth/Shop";
+import Cart from "./pages/auth/Cart";
+import History from "./pages/auth/History";
 
 // router.tsx
 const router = createBrowserRouter([
@@ -23,7 +25,15 @@ const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <Dashboard />  // --> child element
+        element: <Shop />  // --> child element
+      },
+      {
+        path: "cart",
+        element: <Cart />  // --> child element
+      },
+      {
+        path: "history",
+        element: <History />  // --> child element
       },
     ]
   },
