@@ -1,6 +1,10 @@
 import { Icon } from "@iconify/react";
+import { useState } from "react";
 
 function Dashboard() {
+    const [tab, setTab] = useState<number>(0);
+    console.log(tab)  // todo: use to display certain page section
+
     return(
         <div>
             <input type="checkbox" id="mobile-menu-toggle" className="hidden" />
@@ -22,21 +26,31 @@ function Dashboard() {
                     <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
                         <div className="px-4 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Main Menu</div>
                         
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
-                            <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
-                            Shop
-                        </a>
+                        <div
+                            onClick={() => setTab(0)}>
+                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
+                                <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
+                                Shop
+                            </a>
+                        </div>
                         
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
-                            <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                            Cart
-                            <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
-                        </a>
+                        <div
+                            onClick={() => setTab(1)}>
+                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                                <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
+                                Cart
+                                <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
+                            </a>
+                        </div>
                         
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
-                            <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                            History
-                        </a>
+                        <div
+                            onClick={() => setTab(2)}>
+                            <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                                <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
+                                History
+                            </a>
+
+                        </div>
                     </nav>
                 </aside>
 

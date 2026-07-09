@@ -1,6 +1,8 @@
+import { Outlet } from "react-router"
+
 const ProtectedRoute = () => {
     return (
-        <p>Protected Route</p>
+        <Outlet />
     )
 }
 
