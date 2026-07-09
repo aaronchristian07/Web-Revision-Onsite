@@ -44,7 +44,7 @@ function LoginPage() {
   return (
     <div className="min-h-screen min-w-screen flex flex-col justify-center items-center">
       <div className="max-w-md relative flex flex-col p-20 rounded-xl text-black bg-white  border border-black">
-          <div className="text-2xl font-bold mb-2 text-[#1e0e4b] text-center">Welcome back to <span className="text-[#7747ff]">App</span></div>
+          <div className="text-2xl font-bold mb-2 text-[#1e0e4b] text-center">Welcome back to <span className="text-[#7747ff]">ESkrim</span></div>
           <div className="text-sm font-normal mb-4 text-center text-[#1e0e4b]">Log in to your account</div>
         <div className="flex flex-col gap-3">
             <div className="block relative"> 
@@ -68,9 +68,6 @@ function LoginPage() {
               onChange={(e)=>setPassword(e.target.value)}  
             />
             </div>
-            <div>
-            <a className="text-sm text-[#7747ff]">Forgot your password?
-            </a></div>
             <button
               className="bg-[#7747ff] w-max m-auto px-6 py-2 rounded text-white text-sm font-normal"
               onClick={handleSubmit}  

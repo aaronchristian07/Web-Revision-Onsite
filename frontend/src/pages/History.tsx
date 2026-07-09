@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 
-function Dashboard() {
+function History() {
     return(
         <div>
             <input type="checkbox" id="mobile-menu-toggle" className="hidden" />
@@ -27,14 +27,14 @@ function Dashboard() {
                             Shop
                         </a>
                         
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
-                            <Icon icon="solar:bed-linear" width="20" stroke-width="1.5"></Icon>
+                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                            <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
                             Cart
                             <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
                         </a>
                         
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
-                            <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
+                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
+                            <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5"></Icon>
                             History
                         </a>
                     </nav>
@@ -49,7 +49,7 @@ function Dashboard() {
                             </label>
 
                             <div className="hidden sm:block">
-                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">History - My Orders!</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>Home</span>
                                     <Icon icon="solar:alt-arrow-right-linear" width="12"></Icon>
@@ -379,104 +379,6 @@ function Dashboard() {
                             </div>
                             </div>
                         </div>
-
-                        <div className="p-10">
-                            <div className="group relative h-96 w-72 perspective-[1000px]">
-                            <div
-                                className="absolute duration-1000 w-full h-full transform-3d group-hover:transform-[rotateX(180deg)]"
-                            >
-                                {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
-                                <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
-                                >
-                                <div className="flex flex-col h-full">
-                                    <div className="flex justify-between items-start">
-                                    <div className="text-3xl font-bold">Caramel Pecan</div>
-                                    <div className="text-5xl">🌟</div>
-                                    </div>
-                                    <div className="mt-4">
-                                    <p className="text-lg">
-                                        Buttered pecans in caramel ice cream.
-                                    </p>
-                                    </div>
-                                    <div className="mt-auto">
-                                    <p className="text-sm opacity-75">Hover to flip!</p>
-                                    </div>
-                                </div>
-                                </div>
-
-                                <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
-                                >
-                                <div className="flex flex-col h-full">
-                                    <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
-                                    <div className="grow">
-                                    <p className="text-lg">
-                                        Ketika ku mendengar bahwa...
-                                    </p>
-                                    </div>
-                                    <div className="flex justify-between items-center mt-auto">
-                                    <button
-                                        className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-                                    >
-                                        Checkout!
-                                    </button>
-                                    <span className="text-3xl">✨</span>
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-
-                        <div className="p-10">
-                            <div className="group relative h-96 w-72 perspective-[1000px]">
-                            <div
-                                className="absolute duration-1000 w-full h-full transform-3d group-hover:transform-[rotateX(180deg)]"
-                            >
-                                {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
-                                <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
-                                >
-                                <div className="flex flex-col h-full">
-                                    <div className="flex justify-between items-start">
-                                    <div className="text-3xl font-bold">Caramel Pecan</div>
-                                    <div className="text-5xl">🌟</div>
-                                    </div>
-                                    <div className="mt-4">
-                                    <p className="text-lg">
-                                        Buttered pecans in caramel ice cream.
-                                    </p>
-                                    </div>
-                                    <div className="mt-auto">
-                                    <p className="text-sm opacity-75">Hover to flip!</p>
-                                    </div>
-                                </div>
-                                </div>
-
-                                <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
-                                >
-                                <div className="flex flex-col h-full">
-                                    <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
-                                    <div className="grow">
-                                    <p className="text-lg">
-                                        Ketika ku mendengar bahwa...
-                                    </p>
-                                    </div>
-                                    <div className="flex justify-between items-center mt-auto">
-                                    <button
-                                        className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-                                    >
-                                        Checkout!
-                                    </button>
-                                    <span className="text-3xl">✨</span>
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
                     </div>
                     
                 </main>
@@ -485,4 +387,4 @@ function Dashboard() {
     )
 }
 
-export default Dashboard
+export default History

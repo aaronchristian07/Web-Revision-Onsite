@@ -2,9 +2,10 @@ import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
-import Shop from "./pages/auth/Shop";
-import Cart from "./pages/auth/Cart";
-import History from "./pages/auth/History";
+import Cart from "./pages/Cart";
+import History from "./pages/History";
+import Dashboard from "./pages/Dashboard";
+import ProfilePage from "./pages/Profile";
 
 // router.tsx
 const router = createBrowserRouter([
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <Shop />  // --> child element
+        element: <Dashboard />  // --> child element
       },
       {
         path: "cart",
@@ -35,16 +36,21 @@ const router = createBrowserRouter([
         path: "history",
         element: <History />  // --> child element
       },
+      {
+        path: "profile",
+        element: <ProfilePage />  // --> child element
+      },
     ]
   },
   {
-	  // for every URL, go to ProtectedRoute (ex: /dashboard, /profile)
-	  // SET THIS BLOCK AFTER AUTH so that auth does not use ProtectedRoute
+    // for every URL, go to ProtectedRoute (ex: /dashboard, /profile)
+    // SET THIS BLOCK AFTER AUTH so that auth does not use ProtectedRoute
     element: <ProtectedRoute />,
     children: [
-    //   {
-	//       ...
-    //   },
+      {
+        path: "dashboard",
+        element: <Dashboard />  // --> child element
+      }
     ]
   },
 ]);
