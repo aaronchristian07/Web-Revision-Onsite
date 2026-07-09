@@ -19,8 +19,8 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-                        <div className="px-4 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Main Menu</div>
+                    <nav className="flex-1 py-6 px-4 space-y-1 bg-pink-100">
+                        <div className="px-4 mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider">Main Menu</div>
                         
                         <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
                             <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
@@ -85,7 +85,7 @@ function Dashboard() {
                             </div>
                         </div>
                     </header>
-                    <div className="flex flex-row flex-wrap">
+                    <div className="flex flex-row flex-wrap bg-pink-100">
                         <div className="p-10">
                             <div className="group relative h-96 w-72 perspective-[1000px]">
                             <div
@@ -93,7 +93,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -112,7 +112,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -142,7 +142,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -161,7 +161,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -191,7 +191,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -210,7 +210,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -240,7 +240,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -259,7 +259,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -289,7 +289,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -308,7 +308,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -338,7 +338,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -357,7 +357,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -387,7 +387,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -406,7 +406,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
@@ -436,7 +436,7 @@ function Dashboard() {
                             >
                                 {/* <img src="/WEB-MT-AO-KY-ON-CJ-261/frontend/public/images/Icecream.jpg" alt="" /> */}
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-violet-400 to-indigo-600 p-6 text-white backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-350 p-6 text-white backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start">
@@ -455,7 +455,7 @@ function Dashboard() {
                                 </div>
 
                                 <div
-                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-400 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
+                                className="absolute w-full h-full rounded-xl bg-linear-to-br from-350 to-purple-600 p-6 text-white transform-[rotateX(180deg)] backface-hidden"
                                 >
                                 <div className="flex flex-col h-full">
                                     <div className="text-2xl font-bold mb-4">Caramel Pecancut</div>
