@@ -71,37 +71,69 @@ services:
       timeout: 5s
       retries: 5
 
-  auth-services:
-    container_name: onsite-auth
-    image: onsite/auth-service:local
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      DB_PORT: ${DB_PORT}
-      PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
-      PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      NGINX_PORT: ${NGINX_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-    ports:
-      - 8001:8001
-    networks:
-      - onsite-net
-    depends_on:
-      postgres-master:
-        condition: service_healthy
-      pgpool:
-        condition: service_started
-      redis:
-        condition: service_healthy
-      nginx:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "sh", "-c" ,"apk --no-cache add curl", ";", "curl", "http://localhost:8001/health"]
-      timeout: 20s
-      retries: 10
-      interval: 30s
+  # auth-services:
+  #   container_name: onsite-auth
+  #   image: onsite/auth-service:local
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #     DB_PORT: ${DB_PORT}
+  #     PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
+  #     PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD}
+  #     NGINX_PORT: ${NGINX_PORT}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   ports:
+  #     - 8001:8001
+  #   networks:
+  #     - onsite-net
+  #   depends_on:
+  #     postgres-master:
+  #       condition: service_healthy
+  #     pgpool:
+  #       condition: service_started
+  #     redis:
+  #       condition: service_healthy
+  #     nginx:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "sh", "-c" ,"apk --no-cache add curl", ";", "curl", "http://localhost:8001/health"]
+  #     timeout: 20s
+  #     retries: 10
+  #     interval: 30s
+  # ice-services:
+  #   container_name: onsite-ice
+  #   image: onsite/ice-service:local
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #     DB_PORT: ${DB_PORT}
+  #     PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
+  #     PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD}
+  #     NGINX_PORT: ${NGINX_PORT}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   ports:
+  #     - 8002:8002
+  #   networks:
+  #     - onsite-net
+  #   depends_on:
+  #     postgres-master:
+  #       condition: service_healthy
+  #     pgpool:
+  #       condition: service_started
+  #     redis:
+  #       condition: service_healthy
+  #     nginx:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "sh", "-c" ,"apk --no-cache add curl", ";", "curl", "http://localhost:8002/health"]
+  #     timeout: 20s
+  #     retries: 10
+  #     interval: 30s
+
 
 volumes:
   postgres-master:
