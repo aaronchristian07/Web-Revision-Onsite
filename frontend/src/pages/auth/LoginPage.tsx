@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { loginApi } from "../../api/authApi";
+import type { LoginRequest } from "../../dto/authDto";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -25,16 +27,22 @@ function LoginPage() {
     navigate("/auth/register")
   ]
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (loading) return;
     setLoading(true)
     setError("")
     try {
       if (!validateInputs()) return;
 
-      // todo: login api
+      const req: LoginRequest = {
+        identifier: identifier,
+        password: password
+      }
 
-      navigate("/dashboard")
+      const response = await loginApi({req, setError})
+      if (response) {
+        navigate("/dashboard")
+      }
 
     } finally {
       setLoading(false)

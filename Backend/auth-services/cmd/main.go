@@ -46,6 +46,9 @@ func main() {
 	router := gin.Default()
 	authGroup := router.Group("/auth")
 	{
-		authGroup.POST("", authUsecase.Register)
+		authGroup.POST("/register", authUsecase.Register)
+		authGroup.POST("/login", authUsecase.Login)
+		authGroup.POST("/validate-token", authUsecase.ValidateToken)
+		authGroup.POST("refresh", authUsecase.RefreshToken)
 	}
 }
