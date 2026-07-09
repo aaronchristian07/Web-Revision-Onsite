@@ -5,3 +5,13 @@ export interface User {
 
     // adjust accordingly
 }
+
+export interface LoginRequest {
+    identifier: string;
+    password: string;
+}
+
+export interface AuthResponse {
+    user: User;
+    accessToken: string;
+}
