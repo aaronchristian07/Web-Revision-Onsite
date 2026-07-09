@@ -1,19 +1,6 @@
 import { Icon } from "@iconify/react";
-import { useState } from "react";
 
-function Dashboard() {
-    const [tab, setTab] = useState<number>(0);
-
-    const TAB_THEMES = {
-        disabled: "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group",
-        enabled: "flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group",
-    }
-
-    const selectTabTheme = (localTab: number) => {
-        if (tab == localTab) return TAB_THEMES["enabled"]
-        else return TAB_THEMES["disabled"]
-    }
-
+function Cart() {
     return(
         <div>
             <input type="checkbox" id="mobile-menu-toggle" className="hidden" />
@@ -35,31 +22,21 @@ function Dashboard() {
                     <nav className="flex-1 py-6 px-4 space-y-1 bg-pink-100">
                         <div className="px-4 mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider">Main Menu</div>
                         
-                        <div
-                            onClick={() => setTab(0)}>
-                            <a className={selectTabTheme(0)}>
-                                <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
-                                Shop
-                            </a>
-                        </div>
+                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                            <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
+                            Shop
+                        </a>
                         
-                        <div
-                            onClick={() => setTab(1)}>
-                            <a className={selectTabTheme(1)}>
-                                <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                                Cart
-                                <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
-                            </a>
-                        </div>
+                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group">
+                            <Icon icon="solar:bed-linear" width="20" stroke-width="1.5"></Icon>
+                            Cart
+                            <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
+                        </a>
                         
-                        <div
-                            onClick={() => setTab(2)}>
-                            <a className={selectTabTheme(2)}>
-                                <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                                History
-                            </a>
-
-                        </div>
+                        <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group">
+                            <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
+                            History
+                        </a>
                     </nav>
                 </aside>
 
@@ -72,7 +49,7 @@ function Dashboard() {
                             </label>
 
                             <div className="hidden sm:block">
-                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Cart - Your Queue Items</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>Home</span>
                                     <Icon icon="solar:alt-arrow-right-linear" width="12"></Icon>
@@ -508,4 +485,4 @@ function Dashboard() {
     )
 }
 
-export default Dashboard
+export default Cart

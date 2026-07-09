@@ -72,7 +72,7 @@ function Dashboard() {
                             </label>
 
                             <div className="hidden sm:block">
-                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Shop - Take a look at our delicious Ice Creamy</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>Home</span>
                                     <Icon icon="solar:alt-arrow-right-linear" width="12"></Icon>

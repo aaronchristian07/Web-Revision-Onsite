@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 
-function Dashboard() {
+function History() {
     return(
         <div>
             <input type="checkbox" id="mobile-menu-toggle" className="hidden" />
@@ -49,7 +49,7 @@ function Dashboard() {
                             </label>
 
                             <div className="hidden sm:block">
-                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">History - My Orders!</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>Home</span>
                                     <Icon icon="solar:alt-arrow-right-linear" width="12"></Icon>
@@ -387,4 +387,4 @@ function Dashboard() {
     )
 }
 
-export default Dashboard
+export default History
