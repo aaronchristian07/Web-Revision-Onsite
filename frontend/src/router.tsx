@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
+import Dashboard from "./pages/auth/Dashboard";
 
 // router.tsx
 const router = createBrowserRouter([
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />  // --> child element
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />  // --> child element
       },
     ]
   },
