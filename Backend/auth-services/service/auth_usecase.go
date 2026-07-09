@@ -105,9 +105,57 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 }
 
 func (a *authService) ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error) {
-	
+	ParsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		return []byte(a.jwtSecret), nil
+	})
+
+	if err != nil {
+		return &dto.ValidateTokenResponse{
+			Valid: false,
+		}, nil
+	}
+
+	claims, ok := ParsedToken.Claims.(*jwtClaims)
+	if !ok {
+		return &dto.ValidateTokenResponse{
+			Valid: false,
+		}, nil
+	}
+
+	return &dto.ValidateTokenResponse{
+		Valid:  true,
+		Email:  claims.Email,
+		UserID: claims.UserID,
+		Role:   claims.Role,
+	}, nil
+
 }
 
-func (a *authService) RefreshToken(ctx context.Context, token *dto.RefreshTokenRequest) (*dto.AuthResponse, error) {
+func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.AuthResponse, error) {
+	storedToken, err := a.repo.FindRefreshToken(ctx, token)
+	if err != nil {
+		return nil, errors.New("Not find")
+	}
 
+	if time.Now().After(storedToken.ExpiresAt) {
+		a.repo.DeleteRefreshToken(ctx, token)
+		return nil, errors.New("refresh token gone")
+	}
+
+	user, err := a.repo.FindByID(ctx, storedToken.UserID)
+	if err != nil {
+		return nil, errors.New("tidak ketemu user itu")
+	}
+
+	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Role)
+	if err != nil {
+		return nil, errors.New("access token failed to generate")
+	}
+
+	return &dto.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: token,
+		UserID:       user.ID,
+		Role:         user.Role,
+	}, nil
 }

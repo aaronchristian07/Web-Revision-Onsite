@@ -10,5 +10,5 @@ type AuthService interface {
 	Register(ctx context.Context, req *dto.RegisterRequest) (*dto.MessageResponse, error)
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthResponse, error)
 	ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error)
-	RefreshToken(ctx context.Context, token *dto.RefreshTokenRequest) (*dto.AuthResponse, error)
+	RefreshToken(ctx context.Context, token string) (*dto.AuthResponse, error)
 }

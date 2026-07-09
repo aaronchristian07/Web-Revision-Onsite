@@ -24,8 +24,8 @@ type AuthResponse struct {
 }
 
 type ValidateTokenResponse struct {
-	Valid  string `json;"valid"`
-	Token  string `json:"token"`
+	Valid  bool   `json;"valid"`
+	Email  string `json:"email"`
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
 }

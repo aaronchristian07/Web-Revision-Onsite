@@ -16,5 +16,5 @@ type AuthRepoInterface interface {
 
 	SaveRefreshToken(ctx context.Context, token *model.RefreshToken) error
 	FindRefreshToken(ctx context.Context, token string) (*model.RefreshToken, error)
-	DeleteRefreshToken(ctx context.Context, token *model.RefreshToken) error
+	DeleteRefreshToken(ctx context.Context, token string) error
 }

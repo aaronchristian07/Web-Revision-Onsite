@@ -51,6 +51,6 @@ func (a *authRepo) FindRefreshToken(ctx context.Context, token string) (*model.R
 	return &rt, err
 }
 
-func (a *authRepo) DeleteRefreshToken(ctx context.Context, token *model.RefreshToken) error {
+func (a *authRepo) DeleteRefreshToken(ctx context.Context, token string) error {
 	return a.db.WithContext(ctx).Where("token = ?", token).Delete(&model.RefreshToken{}).Error
 }
