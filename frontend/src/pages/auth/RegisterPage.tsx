@@ -26,19 +26,6 @@ function RegisterPage() {
                     </label>
                     <input className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" placeholder="••••••••" id="confirmPassword" type="password" />
                 </div>
-                <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                    <input className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 bg-gray-700 border-gray-600 focus:ring-primary-600 ring-offset-gray-800" type="checkbox" aria-describedby="terms" id="terms" />
-                    </div>
-                    <div className="ml-3 text-sm">
-                    <label className="font-light text-gray-500 text-gray-300">
-                        I accept the
-                        <a href="#" className="font-medium text-primary-600 hover:underline text-primary-500">
-                        Terms and Conditions
-                        </a>
-                    </label>
-                    </div>
-                </div>
 
                 <button className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white" type="submit">
                     Create an account
@@ -46,7 +33,7 @@ function RegisterPage() {
                 
             </div>
             </div>
-        </div>
+            </div>
         </div>
     )
 }
