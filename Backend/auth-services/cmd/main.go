@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -22,26 +21,12 @@ func main() {
 	}
 
 	db, err := gorm.Open(postgres.Open(config.DBString))
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
-		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
-	db, err = gorm.Open(postgres.Open(dsn))
-
 	if err != nil {
-		log.Fatalf("failed to run migration: %s", err)
+		log.Fatalf("failed to connect to db: %s", err)
 	}
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         config.RedisAddr,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolSize:     10,
-		PoolTimeout:  30 * time.Second,
-	})
-
-	clusterClient := redis.NewClusterClient(&redis.ClusterOptions{
-		Addr:         string.Split(config.RedisAddr, ","),
 		DialTimeout:  10 * time.Second,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
