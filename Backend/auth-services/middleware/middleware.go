@@ -18,7 +18,7 @@ func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
 			return
 		}
 		tokenString := strings.TrimPrefix(authHeader, "Bearer")
-		claims, err := utils.ValidateToken(tokenString, cfg.JWT_SECRET)
+		claims, err := utils.ValidateToken(tokenString, cfg.JWTSecret)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "invalid access token"})
 			c.Abort()

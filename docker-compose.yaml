@@ -26,6 +26,7 @@ services:
        postgres-master:
         condition: service_healthy
     environment:
+      PGPOOL_PARAMS_PORT: 5432
       PGPOOL_PARAMS_BACKEND_HOSTNAME0: postgres-master
       PGPOOL_PARAMS_BACKEND_PORT0: 5432
       PGPOOL_PARAMS_BACKEND_WEIGHT0: 1
@@ -43,7 +44,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: onsite-redis
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "$${REDIS_PASSWORD}"]
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
@@ -73,14 +74,19 @@ services:
 
   auth-services:
     container_name: onsite-auth
+    build:
+      context: ./Backend/auth-services
+      dockerfile: Dockerfile.dev
     image: auth-service:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       DB_PORT: ${DB_PORT}
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
       PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
       PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+      REDIS_ADDR: "redis:6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       NGINX_PORT: ${NGINX_PORT}
       JWT_SECRET: ${JWT_SECRET}
@@ -98,7 +104,33 @@ services:
       nginx:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "sh", "-c" ,"apk --no-cache add curl", ";", "curl", "http://localhost:8001/health"]
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8001/health || exit 1"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+
+  ice-service:
+    container_name: onsite-ice
+    build:
+      context: ./Backend/ice-service
+      dockerfile: Dockerfile.dev
+    image: ice-service:latest
+    environment:
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
+      ICE_SERVICE_PORT: ${ICE_SERVICE_PORT}
+    ports:
+      - ${ICE_SERVICE_PORT}:${ICE_SERVICE_PORT}
+    networks:
+      - onsite-net
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      pgpool:
+        condition: service_started
+      nginx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:${ICE_SERVICE_PORT}/health || exit 1"]
       timeout: 20s
       retries: 10
       interval: 30s

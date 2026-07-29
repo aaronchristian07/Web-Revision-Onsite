@@ -44,11 +44,19 @@ func main() {
 	authUsecase := http.NewAuthUsecase(authService)
 
 	router := gin.Default()
+	router.GET("/health", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	authGroup := router.Group("/auth")
 	{
 		authGroup.POST("/register", authUsecase.Register)
 		authGroup.POST("/login", authUsecase.Login)
 		authGroup.POST("/validate-token", authUsecase.ValidateToken)
 		authGroup.POST("refresh", authUsecase.RefreshToken)
+	}
+
+	if err := router.Run(":8001"); err != nil {
+		log.Fatalf("failed to start server: %s", err)
 	}
 }
