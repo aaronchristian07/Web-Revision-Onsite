@@ -73,10 +73,11 @@ func (i *iceService) GetIceCreamList(ctx context.Context, req *dto.ListIceCreamR
 
 func (i *iceService) CreateIceCream(ctx context.Context, req *dto.CreateIceCreamRequest) (*dto.MessageResponse, error) {
 	icecream := &model.IceCream{
-		IceCreamName:   req.IceCreamName,
-		IceCreamPrice:  req.IceCreamPrice,
-		IceCreamFlavor: req.IceCreamFlavor,
-		IceCreamDesc:   req.IceCreamDesc,
+		IceCreamName:     req.IceCreamName,
+		IceCreamPrice:    req.IceCreamPrice,
+		IceCreamFlavor:   req.IceCreamFlavor,
+		IceCreamDesc:     req.IceCreamDesc,
+		IceCreamImageURL: req.ImageURL,
 	}
 	if err := i.repo.CreateIceCream(ctx, icecream); err != nil {
 		return nil, errors.New("gagal buat ESkrim")
@@ -88,10 +89,12 @@ func (i *iceService) CreateIceCream(ctx context.Context, req *dto.CreateIceCream
 
 func (i *iceService) UpdateIceCream(ctx context.Context, req *dto.UpdateIceCreamRequest) (*dto.MessageResponse, error) {
 	icecream := &model.IceCream{
-		IceCreamName:   req.IceCreamName,
-		IceCreamPrice:  req.IceCreamPrice,
-		IceCreamFlavor: req.IceCreamFlavor,
-		IceCreamDesc:   req.IceCreamDesc,
+		IceCreamID:       req.IceCreamID,
+		IceCreamName:     req.IceCreamName,
+		IceCreamPrice:    req.IceCreamPrice,
+		IceCreamFlavor:   req.IceCreamFlavor,
+		IceCreamDesc:     req.IceCreamDesc,
+		IceCreamImageURL: req.ImageURL,
 	}
 	if err := i.repo.UpdateIceCream(ctx, icecream); err != nil {
 		return nil, errors.New("gagal buat ESkrim")

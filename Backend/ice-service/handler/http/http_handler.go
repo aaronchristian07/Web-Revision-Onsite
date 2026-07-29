@@ -5,15 +5,40 @@ import (
 
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/ice-service/dto"
 	services "github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/ice-service/services"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/ice-service/storage"
 	"github.com/gin-gonic/gin"
 )
 
 type iceHandler struct {
-	uc services.IceService
+	uc      services.IceService
+	storage *storage.ImageStorage
 }
 
-func NewIceHandler(uc services.IceService) *iceHandler {
-	return &iceHandler{uc: uc}
+func NewIceHandler(uc services.IceService, storage *storage.ImageStorage) *iceHandler {
+	return &iceHandler{uc: uc, storage: storage}
+}
+
+func (i *iceHandler) UploadImage(c *gin.Context) {
+	fileHeader, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file gambar wajib diisi"})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal membuka file gambar"})
+		return
+	}
+	defer file.Close()
+
+	url, err := i.storage.UploadImage(c.Request.Context(), file, fileHeader)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal upload gambar: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"image_url": url})
 }
 
 func (i *iceHandler) CreateIceCream(c *gin.Context) {

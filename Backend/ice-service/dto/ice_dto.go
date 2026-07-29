@@ -5,6 +5,7 @@ type CreateIceCreamRequest struct {
 	IceCreamFlavor string `json:"ice_cream_flavor"`
 	IceCreamPrice  int    `json:"ice_cream_price"`
 	IceCreamDesc   string `json:"ice_cream_desc"`
+	ImageURL       string `json:"image_url"`
 }
 
 type DeleteIceCreamRequest struct {
@@ -17,6 +18,7 @@ type UpdateIceCreamRequest struct {
 	IceCreamFlavor string `json:"ice_cream_flavor"`
 	IceCreamPrice  int    `json:"ice_cream_price"`
 	IceCreamDesc   string `json:"ice_cream_desc"`
+	ImageURL       string `json:"image_url"`
 }
 
 type MessageResponse struct {

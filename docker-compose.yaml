@@ -118,6 +118,11 @@ services:
     environment:
       DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
       ICE_SERVICE_PORT: ${ICE_SERVICE_PORT}
+      SEAWEED_S3_ENDPOINT: ${SEAWEED_S3_ENDPOINT}
+      SEAWEED_S3_PUBLIC_ENDPOINT: ${SEAWEED_S3_PUBLIC_ENDPOINT}
+      SEAWEED_ACCESS_KEY: ${SEAWEED_ACCESS_KEY}
+      SEAWEED_SECRET_KEY: ${SEAWEED_SECRET_KEY}
+      SEAWEED_BUCKET: ${SEAWEED_BUCKET}
     ports:
       - ${ICE_SERVICE_PORT}:${ICE_SERVICE_PORT}
     networks:
@@ -129,16 +134,39 @@ services:
         condition: service_started
       nginx:
         condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:${ICE_SERVICE_PORT}/health || exit 1"]
       timeout: 20s
       retries: 10
       interval: 30s
 
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: onsite-seaweed
+    command: "server -s3 -s3.config=/etc/seaweedfs/s3-config.json -dir=/data -master.volumeSizeLimitMB=100"
+    ports:
+      - "9333:9333"
+      - "8888:8888"
+      - "8333:8333"
+    volumes:
+      - seaweed-data:/data
+      - ./seaweed/s3-config.json:/etc/seaweedfs/s3-config.json:ro
+    networks:
+      - onsite-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9333/cluster/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   postgres-master:
   redis:
   nginx:
+  seaweed-data:
 
 networks:
   onsite-net:
