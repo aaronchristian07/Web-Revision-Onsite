@@ -1,84 +1,145 @@
-import {
-    SAMPLE_TRANSACTIONS,
-    type Transaction,
-    type TransactionLineItem,
-    type TransactionStatus,
-} from "../lib/dummyData";
+import axios from "axios";
+import type {
+    AddToCartRequest,
+    CheckoutRequest,
+    CheckoutResponse,
+    GetCartRequest,
+    GetCartResponse,
+    MessageResponse,
+    RemoveCartItemRequest,
+    UpdateCartItemRequest,
+} from "../dto/paymentDto";
+import { API_BASE_URL } from "../lib/api";
+import { parseApiError } from "../lib/error";
 
-// Mock data layer for transactions. The real backend doesn't have a
-// transaction/order API yet (only auth-service and ice-service exist today),
-// so these functions model the shape a real one would plausibly take. Once
-// that endpoint exists, only the bodies here need to change.
-
-const MOCK_LATENCY_MS = 500;
-
-let mockTransactions: Transaction[] = [...SAMPLE_TRANSACTIONS];
-let nextTrxId = 1000 + mockTransactions.length;
-
-function delay<T>(value: T, ms = MOCK_LATENCY_MS): Promise<T> {
-    return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+interface AddToCartApiProps {
+    req: AddToCartRequest;
+    setError: (error: string) => void;
 }
 
-export interface ListTransactionParams {
-    keyword?: string;
-    status?: TransactionStatus | "";
-    dateFrom?: string;
-    dateTo?: string;
-    page?: number;
-    limit?: number;
+export const AddToCartApi = async ({ req, setError }: AddToCartApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.post<MessageResponse>(
+            `${API_BASE_URL}/payment/cart`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export interface ListTransactionResult {
-    items: Transaction[];
-    total: number;
+interface GetCartApiProps {
+    req: GetCartRequest;
+    setError: (error: string) => void;
 }
 
-export async function fetchTransactions({
-    keyword = "",
-    status = "",
-    dateFrom = "",
-    dateTo = "",
-    page = 1,
-    limit = 25,
-}: ListTransactionParams): Promise<ListTransactionResult> {
-    const kw = keyword.trim().toLowerCase();
-    const filtered = mockTransactions.filter((trx) => {
-        if (kw && !`${trx.id} ${trx.username}`.toLowerCase().includes(kw)) return false;
-        if (status && trx.status !== status) return false;
-        if (dateFrom && trx.date < dateFrom) return false;
-        if (dateTo && trx.date > dateTo) return false;
-        return true;
-    });
-    const start = (page - 1) * limit;
-    return delay({ items: filtered.slice(start, start + limit), total: filtered.length });
+export const GetCartApi = async ({ req, setError }: GetCartApiProps): Promise<GetCartResponse | null> => {
+    try {
+        const response = await axios.get<GetCartResponse>(
+            `${API_BASE_URL}/payment/cart`,
+            { params: req }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export async function fetchTransactionDetail(id: string): Promise<Transaction | null> {
-    return delay(mockTransactions.find((trx) => trx.id === id) ?? null);
+interface UpdateCartItemApiProps {
+    req: UpdateCartItemRequest;
+    setError: (error: string) => void;
 }
 
-export async function updateTransactionStatus(id: string, status: TransactionStatus): Promise<Transaction | null> {
-    mockTransactions = mockTransactions.map((trx) => (trx.id === id ? { ...trx, status } : trx));
-    return delay(mockTransactions.find((trx) => trx.id === id) ?? null);
+export const UpdateCartItemApi = async ({ req, setError }: UpdateCartItemApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.put<MessageResponse>(
+            `${API_BASE_URL}/payment/cart`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export interface CreateTransactionPayload {
-    username: string;
-    items: TransactionLineItem[];
+interface EmptyCartApiProps {
+    req: RemoveCartItemRequest;
+    setError: (error: string) => void;
 }
 
-export async function createTransaction({ username, items }: CreateTransactionPayload): Promise<Transaction> {
-    const now = new Date();
-    const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const created: Transaction = {
-        id: `TRX-${nextTrxId++}`,
-        username,
-        date: now.toISOString().slice(0, 10),
-        time: now.toTimeString().slice(0, 5),
-        status: "pending",
-        items,
-        total,
-    };
-    mockTransactions = [created, ...mockTransactions];
-    return delay(created);
+export const EmptyCartApi = async ({ req, setError }: EmptyCartApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.delete<MessageResponse>(
+            `${API_BASE_URL}/payment/cart`,
+            { data: req }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface RemoveCartItemApiProps {
+    itemId: number;
+    setError: (error: string) => void;
+}
+
+export const RemoveCartItemApi = async ({ itemId, setError }: RemoveCartItemApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.delete<MessageResponse>(
+            `${API_BASE_URL}/payment/cart`,
+            { params: {id: itemId} }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface CheckoutCartApiProps {
+    req: CheckoutRequest;
+    setError: (error: string) => void;
+}
+
+export const CheckoutCartApi = async ({ req, setError }: CheckoutCartApiProps): Promise<CheckoutResponse | null> => {
+    try {
+        const response = await axios.post<CheckoutResponse>(
+            `${API_BASE_URL}/payment/checkout`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
