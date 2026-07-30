@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { createIceCream, fetchIceCreamList, uploadIceCreamImage } from "../../api/iceCreamApi";
-import type { IceCreamItem } from "../../lib/dummyData";
+import { createIceCreamApi, getIceCreamApi, uploadIceCreamApi } from "../../api/iceCreamApi";
+import type { IceCreamResponse } from "../../dto/iceDto";
 import { formatIDR } from "../../lib/format";
 
 function IceCreamManagement() {
@@ -14,15 +14,15 @@ function IceCreamManagement() {
     const [success, setSuccess] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const [variants, setVariants] = useState<IceCreamItem[]>([]);
+    const [variants, setVariants] = useState<IceCreamResponse[]>([]);
     const [loadingVariants, setLoadingVariants] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
-        fetchIceCreamList({ limit: 5 }).then((result) => {
+        getIceCreamApi({ req: { keyword: "", page: 1, limit: 5 }, setError: () => {} }).then((result) => {
             if (cancelled) return;
-            setVariants(result.items);
+            setVariants(result?.items ?? []);
             setLoadingVariants(false);
         });
         return () => {
@@ -52,30 +52,37 @@ function IceCreamManagement() {
         setError(null);
         setSubmitting(true);
         try {
-            let imageUrl: string | undefined;
+            let imageUrl = "";
             if (imageFile) {
-                const uploaded = await uploadIceCreamImage(imageFile);
-                imageUrl = uploaded.imageUrl;
+                const uploaded = await uploadIceCreamApi({ image: imageFile, setError });
+                if (!uploaded) {
+                    return;
+                }
+                imageUrl = uploaded;
             }
 
-            const created = await createIceCream({
-                name,
-                flavor,
-                price: Number(price),
-                description,
-                emoji: "🍦",
-                image: imageUrl,
+            const created = await createIceCreamApi({
+                req: {
+                    ice_cream_name: name,
+                    ice_cream_flavor: flavor,
+                    ice_cream_price: Number(price),
+                    ice_cream_desc: description,
+                    image_url: imageUrl,
+                },
+                setError,
             });
 
-            setSuccess(`Varian "${created.name}" berhasil dibuat — tersimpan sementara di sesi ini (masih data mock, belum backend asli).`);
-            setName("");
-            setFlavor("");
-            setPrice("");
-            setDescription("");
-            setImageFile(null);
-            setImagePreview(null);
-            setLoadingVariants(true);
-            setRefreshKey((key) => key + 1);
+            if (created) {
+                setSuccess(`Varian "${name}" berhasil dibuat.`);
+                setName("");
+                setFlavor("");
+                setPrice("");
+                setDescription("");
+                setImageFile(null);
+                setImagePreview(null);
+                setLoadingVariants(true);
+                setRefreshKey((key) => key + 1);
+            }
         } finally {
             setSubmitting(false);
         }
@@ -178,15 +185,15 @@ function IceCreamManagement() {
                           ))
                         : variants.map((item) => (
                               <div
-                                  key={item.id}
+                                  key={item.ice_cream_id}
                                   className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                               >
-                                  <span className="text-2xl">{item.emoji}</span>
+                                  <span className="text-2xl">🍦</span>
                                   <div className="flex-1">
-                                      <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                                      <p className="text-xs text-slate-500">{item.flavor}</p>
+                                      <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
+                                      <p className="text-xs text-slate-500">{item.ice_cream_flavor}</p>
                                   </div>
-                                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{formatIDR(item.price)}</span>
+                                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{formatIDR(item.ice_cream_price)}</span>
                               </div>
                           ))}
                 </div>

@@ -54,6 +54,9 @@ export const registerApi = async ({ req, setError }: RegisterApiProps): Promise<
 }
 
 export function authHeader() {
-    const token = useAuthStore((s) => s.accessToken);  // subscribe
+    // .getState() reads the store directly instead of subscribing - this is
+    // called from plain async functions, not React components, so the hook
+    // form (useAuthStore(...)) would violate the rules of hooks.
+    const token = useAuthStore.getState().accessToken;
     return { Authorization: `Bearer ${token}` };
 }

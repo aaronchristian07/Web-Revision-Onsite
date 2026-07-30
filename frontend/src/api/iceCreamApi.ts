@@ -133,7 +133,8 @@ export const uploadIceCreamApi = async ({ image, setError }: UploadIceCreamApiPr
         const formData = new FormData();
         formData.append("image", image);
 
-        const response = await axios.post<string>(
+        // backend returns { image_url: "..." }, not a bare string
+        const response = await axios.post<{ image_url: string }>(
             `${API_BASE_URL}/ice-cream/image`,
             formData,
             {
@@ -149,7 +150,7 @@ export const uploadIceCreamApi = async ({ image, setError }: UploadIceCreamApiPr
             },
         )
         if (response && response.data) {
-            return response.data;
+            return response.data.image_url;
         }
 
         return null;

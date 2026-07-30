@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
 import StatusBadge from "../components/StatusBadge";
-import { fetchTransactions, updateTransactionStatus } from "../api/transactionApi";
-import type { Transaction, TransactionStatus } from "../lib/dummyData";
+// NOTE: payment-service only has cart/checkout endpoints, no "list my orders"
+// endpoint yet - this stays on local sample data until that's added.
+import { SAMPLE_TRANSACTIONS, type Transaction, type TransactionStatus } from "../lib/dummyData";
 import { formatIDR } from "../lib/format";
 
 const PAGE_SIZE = 6;
@@ -14,79 +15,57 @@ const NEXT_STATUS: Partial<Record<TransactionStatus, TransactionStatus>> = {
 };
 
 function Order() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [total, setTotal] = useState(0);
+    const [transactions, setTransactions] = useState<Transaction[]>(() => SAMPLE_TRANSACTIONS.slice(0, 18));
     const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<Transaction | null>(null);
 
-    useEffect(() => {
-        let cancelled = false;
-        fetchTransactions({ page, limit: PAGE_SIZE }).then((result) => {
-            if (cancelled) return;
-            setTransactions(result.items);
-            setTotal(result.total);
-            setLoading(false);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [page]);
+    const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
+    const pageItems = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-    const handlePageChange = (nextPage: number) => {
-        setLoading(true);
-        setPage(nextPage);
-    };
-
-    const applyStatus = async (trx: Transaction, status: TransactionStatus) => {
-        const updated = await updateTransactionStatus(trx.id, status);
-        if (!updated) return;
-        setTransactions((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-        setSelected((prev) => (prev && prev.id === updated.id ? updated : prev));
+    const applyStatus = (trx: Transaction, status: TransactionStatus) => {
+        setTransactions((prev) => prev.map((t) => (t.id === trx.id ? { ...t, status } : t)));
+        setSelected((prev) => (prev && prev.id === trx.id ? { ...prev, status } : prev));
     };
 
     const handleAdvanceStatus = (trx: Transaction) => {
         const next = NEXT_STATUS[trx.status];
         if (!next) return;
-        void applyStatus(trx, next);
+        applyStatus(trx, next);
     };
 
     const handleCancel = (trx: Transaction) => {
-        void applyStatus(trx, "cancelled");
+        applyStatus(trx, "cancelled");
     };
 
-    if (!loading && total === 0) {
+    if (transactions.length === 0) {
         return <p className="flex-1 px-10 py-24 text-center text-slate-500">Belum ada transaksi.</p>;
     }
 
     return (
         <div className="flex-1 px-10 py-10">
+            <p className="text-xs text-slate-400 mb-4">
+                Data contoh - payment-service belum punya endpoint riwayat transaksi.
+            </p>
             <div className="space-y-3">
-                {loading
-                    ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                          <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
-                      ))
-                    : transactions.map((trx) => (
-                          <button
-                              type="button"
-                              key={trx.id}
-                              onClick={() => setSelected(trx)}
-                              className="w-full flex flex-wrap items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-left hover:border-primary/40 transition-colors"
-                          >
-                              <div className="flex-1 min-w-40">
-                                  <p className="font-semibold text-slate-800 dark:text-white">{trx.id}</p>
-                                  <p className="text-sm text-slate-500">{trx.date} {trx.time}</p>
-                              </div>
-                              <p className="text-sm text-slate-500 min-w-32">{trx.items.length} item</p>
-                              <p className="font-semibold text-slate-700 dark:text-slate-200 min-w-32">{formatIDR(trx.total)}</p>
-                              <StatusBadge status={trx.status} />
-                          </button>
-                      ))}
+                {pageItems.map((trx) => (
+                    <button
+                        type="button"
+                        key={trx.id}
+                        onClick={() => setSelected(trx)}
+                        className="w-full flex flex-wrap items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-left hover:border-primary/40 transition-colors"
+                    >
+                        <div className="flex-1 min-w-40">
+                            <p className="font-semibold text-slate-800 dark:text-white">{trx.id}</p>
+                            <p className="text-sm text-slate-500">{trx.date} {trx.time}</p>
+                        </div>
+                        <p className="text-sm text-slate-500 min-w-32">{trx.items.length} item</p>
+                        <p className="font-semibold text-slate-700 dark:text-slate-200 min-w-32">{formatIDR(trx.total)}</p>
+                        <StatusBadge status={trx.status} />
+                    </button>
+                ))}
             </div>
 
-            {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
             <Modal open={selected !== null} title={selected?.id ?? ""} onClose={() => setSelected(null)}>
                 {selected && (
