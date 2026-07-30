@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import IceCreamCard from "../../components/IceCreamCard";
 import IceCreamCardSkeleton from "../../components/IceCreamCardSkeleton";
 import Modal from "../../components/Modal";
 import Pagination from "../../components/Pagination";
-import { SAMPLE_ICE_CREAMS, SAMPLE_TRANSACTIONS, type IceCreamItem } from "../../lib/dummyData";
+import { fetchIceCreamList } from "../../api/iceCreamApi";
+import { fetchTransactions } from "../../api/transactionApi";
+import type { IceCreamItem, Transaction } from "../../lib/dummyData";
 import { useDebounce } from "../../lib/useDebounce";
 import { formatIDR } from "../../lib/format";
 
@@ -15,9 +17,13 @@ function AdminDashboard() {
     const debouncedKeyword = useDebounce(keyword, 400);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [items, setItems] = useState<IceCreamItem[]>([]);
+    const [total, setTotal] = useState(0);
     const [selected, setSelected] = useState<IceCreamItem | null>(null);
+    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+    const [totalVariants, setTotalVariants] = useState(0);
 
-    // reset to page 1 and re-trigger the loading skeleton whenever the (debounced) search changes
+    // reset to page 1 and re-trigger the loading state whenever the (debounced) search changes
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
     if (debouncedKeyword !== settledKeyword) {
         setSettledKeyword(debouncedKeyword);
@@ -25,34 +31,46 @@ function AdminDashboard() {
         setLoading(true);
     }
 
-    const filtered = useMemo(() => {
-        const kw = debouncedKeyword.trim().toLowerCase();
-        if (!kw) return SAMPLE_ICE_CREAMS;
-        return SAMPLE_ICE_CREAMS.filter(
-            (item) => item.name.toLowerCase().includes(kw) || item.flavor.toLowerCase().includes(kw)
-        );
-    }, [debouncedKeyword]);
-
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    useEffect(() => {
+        let cancelled = false;
+        fetchIceCreamList({ keyword: debouncedKeyword, page, limit: PAGE_SIZE }).then((result) => {
+            if (cancelled) return;
+            setItems(result.items);
+            setTotal(result.total);
+            setLoading(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [debouncedKeyword, page]);
 
     useEffect(() => {
-        const timeout = setTimeout(() => setLoading(false), 500);
-        return () => clearTimeout(timeout);
-    }, [debouncedKeyword, page]);
+        let cancelled = false;
+        fetchTransactions({ limit: 1000 }).then((result) => {
+            if (!cancelled) setAllTransactions(result.items);
+        });
+        fetchIceCreamList({ limit: 1 }).then((result) => {
+            if (!cancelled) setTotalVariants(result.total);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const handlePageChange = (nextPage: number) => {
         setLoading(true);
         setPage(nextPage);
     };
 
-    const totalRevenue = SAMPLE_TRANSACTIONS.filter((t) => t.status === "completed").reduce((sum, t) => sum + t.total, 0);
-    const pendingCount = SAMPLE_TRANSACTIONS.filter((t) => t.status === "pending").length;
+    const totalRevenue = allTransactions.filter((t) => t.status === "completed").reduce((sum, t) => sum + t.total, 0);
+    const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
 
     const stats = [
         { label: "Transaction Analytics — Revenue", value: formatIDR(totalRevenue), icon: "solar:wallet-money-linear" },
-        { label: "Transaction Analytics — Total", value: SAMPLE_TRANSACTIONS.length, icon: "solar:bill-list-linear" },
-        { label: "Ice Cream Variants", value: SAMPLE_ICE_CREAMS.length, icon: "solar:widget-add-linear" },
+        { label: "Transaction Analytics — Total", value: allTransactions.length, icon: "solar:bill-list-linear" },
+        { label: "Ice Cream Variants", value: totalVariants, icon: "solar:widget-add-linear" },
         { label: "Pending Orders", value: pendingCount, icon: "solar:hourglass-linear" },
     ];
 
@@ -82,14 +100,14 @@ function AdminDashboard() {
                 />
             </div>
 
-            {!loading && pageItems.length === 0 && (
+            {!loading && items.length === 0 && (
                 <p className="text-slate-500 py-16 text-center">No ice cream matches &quot;{debouncedKeyword}&quot;.</p>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading
                     ? Array.from({ length: PAGE_SIZE }).map((_, i) => <IceCreamCardSkeleton key={i} />)
-                    : pageItems.map((item) => (
+                    : items.map((item) => (
                           <IceCreamCard
                               key={item.id}
                               name={item.name}

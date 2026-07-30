@@ -1,5 +1,6 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { SAMPLE_ICE_CREAMS } from "../../lib/dummyData";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { createIceCream, fetchIceCreamList, uploadIceCreamImage } from "../../api/iceCreamApi";
+import type { IceCreamItem } from "../../lib/dummyData";
 import { formatIDR } from "../../lib/format";
 
 function IceCreamManagement() {
@@ -7,16 +8,35 @@ function IceCreamManagement() {
     const [flavor, setFlavor] = useState("");
     const [price, setPrice] = useState("");
     const [description, setDescription] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    const [variants, setVariants] = useState<IceCreamItem[]>([]);
+    const [loadingVariants, setLoadingVariants] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchIceCreamList({ limit: 5 }).then((result) => {
+            if (cancelled) return;
+            setVariants(result.items);
+            setLoadingVariants(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [refreshKey]);
 
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
+        setImageFile(file);
         setImagePreview(file ? URL.createObjectURL(file) : null);
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSuccess(null);
 
@@ -30,12 +50,35 @@ function IceCreamManagement() {
         }
 
         setError(null);
-        setSuccess(`Varian "${name}" berhasil dibuat (dummy — belum upload ke bucket storage & belum simpan ke backend).`);
-        setName("");
-        setFlavor("");
-        setPrice("");
-        setDescription("");
-        setImagePreview(null);
+        setSubmitting(true);
+        try {
+            let imageUrl: string | undefined;
+            if (imageFile) {
+                const uploaded = await uploadIceCreamImage(imageFile);
+                imageUrl = uploaded.imageUrl;
+            }
+
+            const created = await createIceCream({
+                name,
+                flavor,
+                price: Number(price),
+                description,
+                emoji: "🍦",
+                image: imageUrl,
+            });
+
+            setSuccess(`Varian "${created.name}" berhasil dibuat — tersimpan sementara di sesi ini (masih data mock, belum backend asli).`);
+            setName("");
+            setFlavor("");
+            setPrice("");
+            setDescription("");
+            setImageFile(null);
+            setImagePreview(null);
+            setLoadingVariants(true);
+            setRefreshKey((key) => key + 1);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -118,9 +161,10 @@ function IceCreamManagement() {
 
                     <button
                         type="submit"
-                        className="w-full bg-primary hover:opacity-90 font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white transition-opacity"
+                        disabled={submitting}
+                        className="w-full bg-primary hover:opacity-90 font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Create Variant
+                        {submitting ? "Creating..." : "Create Variant"}
                     </button>
                 </form>
             </div>
@@ -128,19 +172,23 @@ function IceCreamManagement() {
             <div className="mt-8">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Existing Variants</h2>
                 <div className="space-y-2">
-                    {SAMPLE_ICE_CREAMS.slice(0, 5).map((item) => (
-                        <div
-                            key={item.id}
-                            className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                        >
-                            <span className="text-2xl">{item.emoji}</span>
-                            <div className="flex-1">
-                                <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                                <p className="text-xs text-slate-500">{item.flavor}</p>
-                            </div>
-                            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{formatIDR(item.price)}</span>
-                        </div>
-                    ))}
+                    {loadingVariants
+                        ? Array.from({ length: 3 }).map((_, i) => (
+                              <div key={i} className="h-16 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                          ))
+                        : variants.map((item) => (
+                              <div
+                                  key={item.id}
+                                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                              >
+                                  <span className="text-2xl">{item.emoji}</span>
+                                  <div className="flex-1">
+                                      <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
+                                      <p className="text-xs text-slate-500">{item.flavor}</p>
+                                  </div>
+                                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{formatIDR(item.price)}</span>
+                              </div>
+                          ))}
                 </div>
             </div>
         </div>
