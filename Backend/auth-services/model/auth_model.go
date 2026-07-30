@@ -12,8 +12,9 @@ type User struct {
 
 type RefreshToken struct {
 	ID        string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	UserID    string `gorm:"uniqueIndex;not null"`
-	Email     string `gorm:"uniqueIndex;not null"`
+	// plain indexes, not unique - a user may hold several live sessions
+	UserID    string `gorm:"index;not null"`
+	Email     string `gorm:"index;not null"`
 	Role      string `gorm:"not null"`
 	Token     string `gorm:"uniqueIndex;not null"`
 	ExpiresAt time.Time

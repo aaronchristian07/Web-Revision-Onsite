@@ -13,6 +13,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const refreshTokenTTL = 7 * 24 * time.Hour
+
 type authService struct {
 	repo      repository.AuthRepoInterface
 	jwtSecret string
@@ -22,11 +24,12 @@ func NewAuthService(repo repository.AuthRepoInterface, jwtSecret string) AuthSer
 	return &authService{repo: repo, jwtSecret: jwtSecret}
 }
 
-func (a *authService) generateAccessToken(userid, email, role string) (string, error) {
-	claims := &jwtClaims{
-		Email:  email,
-		UserID: userid,
-		Role:   role,
+func (a *authService) generateAccessToken(userid, email, username, role string) (string, error) {
+	claims := &Claims{
+		Email:    email,
+		UserID:   userid,
+		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -79,17 +82,18 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, errors.New("gagal bcrypt")
 	}
 
-	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Role)
+	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Username, user.Role)
 	if err != nil {
 		return nil, errors.New("generated accesstoken gagal")
 	}
 
 	refreshTokenID := uuid.New().String()
 	refreshToken := &model.RefreshToken{
-		UserID: user.ID,
-		Email:  user.Email,
-		Role:   user.Role,
-		Token:  refreshTokenID,
+		UserID:    user.ID,
+		Email:     user.Email,
+		Role:      user.Role,
+		Token:     refreshTokenID,
+		ExpiresAt: time.Now().Add(refreshTokenTTL),
 	}
 
 	if err := a.repo.SaveRefreshToken(ctx, refreshToken); err != nil {
@@ -100,33 +104,26 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		AccessToken:  accessToken,
 		RefreshToken: refreshTokenID,
 		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
 		Role:         user.Role,
 	}, nil
 }
 
 func (a *authService) ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error) {
-	ParsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.jwtSecret), nil
-	})
-
+	claims, err := ParseAccessToken(token, a.jwtSecret)
 	if err != nil {
 		return &dto.ValidateTokenResponse{
 			Valid: false,
 		}, nil
 	}
 
-	claims, ok := ParsedToken.Claims.(*jwtClaims)
-	if !ok {
-		return &dto.ValidateTokenResponse{
-			Valid: false,
-		}, nil
-	}
-
 	return &dto.ValidateTokenResponse{
-		Valid:  true,
-		Email:  claims.Email,
-		UserID: claims.UserID,
-		Role:   claims.Role,
+		Valid:    true,
+		Email:    claims.Email,
+		UserID:   claims.UserID,
+		Username: claims.Username,
+		Role:     claims.Role,
 	}, nil
 
 }
@@ -147,7 +144,7 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.Auth
 		return nil, errors.New("tidak ketemu user itu")
 	}
 
-	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Role)
+	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Username, user.Role)
 	if err != nil {
 		return nil, errors.New("access token failed to generate")
 	}
@@ -156,6 +153,8 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.Auth
 		AccessToken:  accessToken,
 		RefreshToken: token,
 		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
 		Role:         user.Role,
 	}, nil
 }

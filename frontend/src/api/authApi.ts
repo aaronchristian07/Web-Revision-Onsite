@@ -1,14 +1,20 @@
 import axios from "axios";
-import type { AuthResponse, LoginRequest } from "../dto/authDto";
+import type {
+    AuthResponse,
+    LoginRequest,
+    MessageResponse,
+    RegisterRequest,
+} from "../dto/authDto";
 import { API_BASE_URL } from "../lib/api";
 import { parseApiError } from "../lib/error";
+import { useAuthStore } from "../lib/authStore";
 
 interface LoginApiProps {
     req: LoginRequest;
     setError: (error: string) => void;
 }
 
-export const loginApi = async({req, setError}: LoginApiProps): Promise<AuthResponse | null> => {
+export const loginApi = async ({ req, setError }: LoginApiProps): Promise<AuthResponse | null> => {
     try {
         const response = await axios.post<AuthResponse>(
             `${API_BASE_URL}/auth/login`,
@@ -23,4 +29,31 @@ export const loginApi = async({req, setError}: LoginApiProps): Promise<AuthRespo
         setError(parseApiError(err))
         return null;
     }
+}
+
+interface RegisterApiProps {
+    req: RegisterRequest;
+    setError: (error: string) => void;
+}
+
+export const registerApi = async ({ req, setError }: RegisterApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.post<MessageResponse>(
+            `${API_BASE_URL}/auth/register`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+export function authHeader() {
+    const token = useAuthStore((s) => s.accessToken);  // subscribe
+    return { Authorization: `Bearer ${token}` };
 }

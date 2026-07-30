@@ -1,16 +1,38 @@
 import { create } from "zustand";
-import type { User } from "../dto/authDto";
+import { persist } from "zustand/middleware";
+import type { AuthResponse, User } from "../dto/authDto";
 
 interface AuthState {
     user: User | null;
-	accessToken: string
-    setUser: (user: User) => void;
-    setAccessToken: (token: string) => void;
+    accessToken: string | null;
+    refreshToken: string | null;
+    setSession: (res: AuthResponse) => void;
+    logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    accessToken: null,
-    setUser: (user) => set({ user: user }),
-    setAccessToken: (token) => set({ accessToken: token }),
-}))
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+
+            // single place the API's snake_case gets translated
+            setSession: (res) =>
+                set({
+                    user: {
+                        userId: res.user_id,
+                        role: res.role,
+                        username: res.username,
+                        email: res.email,
+                    },
+                    accessToken: res.access_token,
+                    refreshToken: res.refresh_token,
+                }),
+
+            logout: () =>
+                set({ user: null, accessToken: null, refreshToken: null }),
+        }),
+        { name: "eskrim-auth" },
+    ),
+);

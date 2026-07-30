@@ -11,7 +11,7 @@ services:
     networks:
       - onsite-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,6 +26,7 @@ services:
        postgres-master:
         condition: service_healthy
     environment:
+      PGPOOL_PARAMS_PORT: 5432
       PGPOOL_PARAMS_BACKEND_HOSTNAME0: postgres-master
       PGPOOL_PARAMS_BACKEND_PORT0: 5432
       PGPOOL_PARAMS_BACKEND_WEIGHT0: 1
@@ -34,16 +35,30 @@ services:
       PGPOOL_PARAMS_ENABLE_POOL_HBA: 'off'
       PGPOOL_PARAMS_ALLOW_CLEAR_TEXT_FRONTEND_AUTH: 'on'
 
-      PGPOOL_PARAMS_PCP_USER: ${PGPOOL_PCP_USER}
-      PGPOOL_PARAMS_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+      # PCP creds are NOT PGPOOL_PARAMS_* - that prefix is for pgpool.conf
+      # settings only. With the wrong names the entrypoint silently logs
+      # "Skip generating pcp.conf" and PCP admin is left unconfigured.
+      PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
+      PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
 
     networks:
       - onsite-net
+    # pgpool refuses to start if it finds a stale pgpool.pid, which survives an
+    # unclean stop because it lives in the container's writable layer. Backing
+    # the directory with tmpfs means it can never outlive the process.
+    tmpfs:
+      - /var/run/pgpool:mode=1777
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
     container_name: onsite-redis
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "$${REDIS_PASSWORD}"]
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
@@ -56,34 +71,48 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    image: nginx:1.31.2-alpine
-    container_name: onsite-nginx 
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.97
+    container_name: onsite-seaweed
+    command: "server -s3 -s3.config=/etc/seaweedfs/s3-config.json -dir=/data -master.volumeSizeLimitMB=100"
     ports:
-      - ${NGINX_PORT}:80
+      - "9333:9333"
+      - "8888:8888"
+      - "8333:8333"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - seaweed-data:/data
+      - ./seaweed/s3-config.json:/etc/seaweedfs/s3-config.json:ro
     networks:
-      - onsite-net 
+      - onsite-net
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.11"]
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9333/cluster/status || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   auth-services:
     container_name: onsite-auth
+    build:
+      context: ./Backend/auth-services
+      dockerfile: Dockerfile.dev
     image: auth-service:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       DB_PORT: ${DB_PORT}
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
       PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
       PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+      REDIS_ADDR: "redis:6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       NGINX_PORT: ${NGINX_PORT}
       JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      # source mount is what makes the air hot-reload in Dockerfile.dev useful
+      - ./Backend/auth-services:/app
+      - auth-go-build:/root/.cache/go-build
     ports:
       - 8001:8001
     networks:
@@ -92,21 +121,135 @@ services:
       postgres-master:
         condition: service_healthy
       pgpool:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  ice-service:
+    container_name: onsite-ice
+    build:
+      context: ./Backend/ice-service
+      dockerfile: Dockerfile.dev
+    image: ice-service:latest
+    environment:
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
+      ICE_SERVICE_PORT: ${ICE_SERVICE_PORT}
+      SEAWEED_S3_ENDPOINT: ${SEAWEED_S3_ENDPOINT}
+      SEAWEED_S3_PUBLIC_ENDPOINT: ${SEAWEED_S3_PUBLIC_ENDPOINT}
+      SEAWEED_ACCESS_KEY: ${SEAWEED_ACCESS_KEY}
+      SEAWEED_SECRET_KEY: ${SEAWEED_SECRET_KEY}
+      SEAWEED_BUCKET: ${SEAWEED_BUCKET}
+    volumes:
+      # source mount is what makes the air hot-reload in Dockerfile.dev useful
+      - ./Backend/ice-service:/app
+      - ice-go-build:/root/.cache/go-build
+    ports:
+      - ${ICE_SERVICE_PORT}:${ICE_SERVICE_PORT}
+    networks:
+      - onsite-net
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      pgpool:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    container_name: onsite-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: onsite-frontend:latest
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    volumes:
+      - ./frontend:/app
+      # keep the image's node_modules - don't let the host mount shadow it
+      - frontend-node-modules:/app/node_modules
+    ports:
+      - ${FRONTEND_PORT}:5173
+    networks:
+      - onsite-net
+    healthcheck:
+      # 127.0.0.1, not localhost: localhost resolves to ::1 in this image and
+      # vite --host 0.0.0.0 binds IPv4 only, so the v6 probe is refused
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5173/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  payment-service:
+    container_name: onsite-payment
+    build:
+      context: ./Backend/payment-service
+      dockerfile: Dockerfile.dev
+    image: payment-service:latest
+    environment:
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
+      PAYMENT_SERVICE_PORT: ${PAYMENT_SERVICE_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - ${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}
+    networks:
+      - onsite-net
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      pgpool:
+        condition: service_started
       nginx:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "sh", "-c" ,"apk --no-cache add curl", ";", "curl", "http://localhost:8001/health"]
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:${PAYMENT_SERVICE_PORT}/health || exit 1"]
       timeout: 20s
       retries: 10
       interval: 30s
 
+  nginx:
+    image: nginx:1.31.2-alpine
+    container_name: onsite-nginx
+    ports:
+      - ${NGINX_PORT}:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - onsite-net
+    # the gateway starts after its upstreams, not before - nginx resolves them
+    # lazily via the docker resolver, so service_started is enough
+    depends_on:
+      auth-services:
+        condition: service_started
+      ice-service:
+        condition: service_started
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   postgres-master:
   redis:
-  nginx:
+  seaweed-data:
+  auth-go-build:
+  ice-go-build:
+  frontend-node-modules:
 
 networks:
   onsite-net:

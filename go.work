@@ -1,0 +1,6 @@
+go 1.25.10
+
+use (
+	./Backend/auth-services
+	./Backend/ice-service
+)

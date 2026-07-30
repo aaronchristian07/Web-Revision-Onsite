@@ -5,6 +5,8 @@ import (
 
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/config"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/handler/http"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/middleware"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/model"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/repository"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/service"
 	"github.com/gin-gonic/gin"
@@ -26,6 +28,10 @@ func main() {
 		log.Fatalf("failed to connect to db: %s", err)
 	}
 
+	if err := db.AutoMigrate(&model.User{}, &model.RefreshToken{}); err != nil {
+		log.Fatalf("failed to migrate database: %s", err)
+	}
+
 	// rdb := redis.NewClient(&redis.Options{
 	// 	Addr:         config.RedisAddr,
 	// 	DialTimeout:  10 * time.Second,
@@ -44,11 +50,23 @@ func main() {
 	authUsecase := http.NewAuthUsecase(authService)
 
 	router := gin.Default()
+	router.GET("/health", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	authGroup := router.Group("/auth")
 	{
 		authGroup.POST("/register", authUsecase.Register)
 		authGroup.POST("/login", authUsecase.Login)
 		authGroup.POST("/validate-token", authUsecase.ValidateToken)
-		authGroup.POST("refresh", authUsecase.RefreshToken)
+		authGroup.POST("/refresh", authUsecase.RefreshToken)
+
+		protected := authGroup.Group("")
+		protected.Use(middleware.AuthMiddleware(config))
+		protected.GET("/me", authUsecase.Me)
+	}
+
+	if err := router.Run(":8001"); err != nil {
+		log.Fatalf("failed to start server: %s", err)
 	}
 }
