@@ -22,6 +22,7 @@ type AuthResponse struct {
 	Username     string `json:"username"`
 	Email        string `json:"email"`
 	Role         string `json:"role"`
+	AvatarURL    string `json:"avatar_url"`
 }
 
 type ValidateTokenResponse struct {
@@ -34,4 +35,16 @@ type ValidateTokenResponse struct {
 
 type MessageResponse struct {
 	Message string `json:"message"`
+}
+
+type UserResponse struct {
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+type UpdateProfileRequest struct {
+	Username string `json:"username" binding:"required,min=3"`
 }

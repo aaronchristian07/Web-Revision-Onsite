@@ -5,7 +5,10 @@ import type {
     CheckoutResponse,
     GetCartRequest,
     GetCartResponse,
+    ListOrdersRequest,
+    ListOrdersResponse,
     MessageResponse,
+    OrderStatsResponse,
     RemoveCartItemRequest,
     UpdateCartItemRequest,
 } from "../dto/paymentDto";
@@ -132,6 +135,88 @@ export const CheckoutCartApi = async ({ req, setError }: CheckoutCartApiProps): 
         const response = await axios.post<CheckoutResponse>(
             `${API_BASE_URL}/payment/checkout`,
             req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface ListOrdersApiProps {
+    req: ListOrdersRequest;
+    setError: (error: string) => void;
+}
+
+export const ListMyOrdersApi = async ({ req, setError }: ListOrdersApiProps): Promise<ListOrdersResponse | null> => {
+    try {
+        const response = await axios.get<ListOrdersResponse>(
+            `${API_BASE_URL}/payment/orders`,
+            { params: req }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+export const ListAllOrdersApi = async ({ req, setError }: ListOrdersApiProps): Promise<ListOrdersResponse | null> => {
+    try {
+        const response = await axios.get<ListOrdersResponse>(
+            `${API_BASE_URL}/payment/admin/orders`,
+            { params: req }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface GetOrderStatsApiProps {
+    setError: (error: string) => void;
+}
+
+export const GetOrderStatsApi = async ({ setError }: GetOrderStatsApiProps): Promise<OrderStatsResponse | null> => {
+    try {
+        const response = await axios.get<OrderStatsResponse>(
+            `${API_BASE_URL}/payment/admin/orders/stats`
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface UpdateOrderStatusApiProps {
+    orderId: string;
+    status: string;
+    setError: (error: string) => void;
+}
+
+export const UpdateOrderStatusApi = async ({ orderId, status, setError }: UpdateOrderStatusApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.put<MessageResponse>(
+            `${API_BASE_URL}/payment/orders/${orderId}/status`,
+            { status }
         )
         if (response && response.data) {
             return response.data;

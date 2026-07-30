@@ -1,31 +1,110 @@
 import { Icon } from "@iconify/react";
-import { useState } from "react";
-import { SAMPLE_ICE_CREAMS } from "../lib/dummyData";
+import { useEffect, useRef, useState } from "react";
+import { UpdateProfileApi, UploadAvatarApi } from "../api/authApi";
+import { getIceCreamApi } from "../api/iceCreamApi";
+import type { IceCreamResponse } from "../dto/iceDto";
 import { formatIDR } from "../lib/format";
 import { useAuthStore } from "../lib/authStore";
 
 function ProfilePage() {
     const user = useAuthStore((state) => state.user);
+    const updateUser = useAuthStore((state) => state.updateUser);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [username, setUsername] = useState(user?.username ?? "");
-    const [email, setEmail] = useState(user?.email ?? "");
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
 
-    const recentIceCreams = SAMPLE_ICE_CREAMS.slice(0, 5);
+    const [recentIceCreams, setRecentIceCreams] = useState<IceCreamResponse[]>([]);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
-    const handleSave = () => {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
+    useEffect(() => {
+        let cancelled = false;
+        getIceCreamApi({
+            req: { keyword: "", page: 1, limit: 5 },
+            setError: (msg) => { if (!cancelled) setFetchError(msg); },
+        }).then((result) => {
+            if (cancelled) return;
+            if (result) setFetchError(null);
+            setRecentIceCreams(result?.items ?? []);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handlePickAvatar = () => fileInputRef.current?.click();
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaveError(null);
+        let ok = true;
+
+        if (avatarFile) {
+            const result = await UploadAvatarApi({ image: avatarFile, setError: setSaveError });
+            if (result) {
+                updateUser({ avatarUrl: result.avatar_url });
+                setAvatarPreview(result.avatar_url);
+                setAvatarFile(null);
+            } else {
+                ok = false;
+            }
+        }
+
+        if (ok && username !== user?.username) {
+            const result = await UpdateProfileApi({ req: { username }, setError: setSaveError });
+            if (result) {
+                updateUser({ username: result.username });
+            } else {
+                ok = false;
+            }
+        }
+
+        setSaving(false);
+        if (ok) {
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2500);
+        }
     };
 
     return (
         <div className="flex-1 px-10 py-10 max-w-3xl">
             <div className="flex items-center gap-4 mb-8">
-                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <Icon icon="solar:user-linear" width="32" />
-                </div>
+                <button
+                    type="button"
+                    onClick={handlePickAvatar}
+                    className="relative w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center overflow-hidden group shrink-0"
+                    aria-label="Change profile photo"
+                >
+                    {avatarPreview ? (
+                        <img src={avatarPreview} alt={username} className="w-full h-full object-cover" />
+                    ) : (
+                        <Icon icon="solar:user-linear" width="32" />
+                    )}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Icon icon="solar:camera-linear" width="20" className="text-white" />
+                    </span>
+                </button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                />
                 <div>
                     <p className="text-lg font-semibold text-slate-800 dark:text-white">{username}</p>
-                    <p className="text-sm text-slate-500">{email}</p>
+                    <p className="text-sm text-slate-500">{user?.email}</p>
                     <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">Role: {user?.role ?? "-"}</p>
                 </div>
             </div>
@@ -54,22 +133,27 @@ function ProfilePage() {
                         <input
                             id="email"
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg block w-full p-2.5 outline-none focus:ring-2 focus:ring-primary/30"
+                            value={user?.email ?? ""}
+                            disabled
+                            className="bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-500 text-sm rounded-lg block w-full p-2.5 outline-none cursor-not-allowed"
                         />
+                        <p className="mt-1 text-xs text-slate-400">Email can&apos;t be changed.</p>
                     </div>
 
+                    {saveError && (
+                        <p className="text-sm text-red-600">{saveError}</p>
+                    )}
                     {saved && (
-                        <p className="text-sm text-emerald-600">Perubahan tersimpan (dummy — belum nyambung backend).</p>
+                        <p className="text-sm text-emerald-600">Changes saved.</p>
                     )}
 
                     <button
                         type="button"
-                        onClick={handleSave}
-                        className="w-full bg-primary hover:opacity-90 font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white transition-opacity"
+                        onClick={() => { void handleSave(); }}
+                        disabled={saving || (username === user?.username && !avatarFile)}
+                        className="w-full bg-primary hover:opacity-90 font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Save Changes
+                        {saving ? "Saving..." : "Save Changes"}
                     </button>
 
                     <button
@@ -83,16 +167,23 @@ function ProfilePage() {
 
             <div>
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">5 Most Recent Ice Cream</h2>
+                {fetchError && (
+                    <p className="text-sm text-red-600 mb-3">{fetchError}</p>
+                )}
                 <div className="flex flex-wrap gap-4">
                     {recentIceCreams.map((item) => (
                         <div
-                            key={item.id}
+                            key={item.ice_cream_id}
                             className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                         >
-                            <span className="text-2xl">{item.emoji}</span>
+                            {item.image_url ? (
+                                <img src={item.image_url} alt={item.ice_cream_name} className="w-10 h-10 rounded-lg object-cover" />
+                            ) : (
+                                <span className="text-2xl">🍦</span>
+                            )}
                             <div>
-                                <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                                <p className="text-xs text-slate-500">{formatIDR(item.price)}</p>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
+                                <p className="text-xs text-slate-500">{formatIDR(item.ice_cream_price)}</p>
                             </div>
                         </div>
                     ))}

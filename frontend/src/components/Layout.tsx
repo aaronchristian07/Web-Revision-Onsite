@@ -86,8 +86,12 @@ function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEA
                                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
                                 <Link to="/profile" className="flex items-center gap-3 pl-1 cursor-pointer">
-                                    <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm bg-primary/10 text-primary flex items-center justify-center">
-                                        <Icon icon="solar:user-linear" width="18" />
+                                    <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm bg-primary/10 text-primary flex items-center justify-center overflow-hidden">
+                                        {user?.avatarUrl ? (
+                                            <img src={user.avatarUrl} alt={user.username ?? "Profile"} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Icon icon="solar:user-linear" width="18" />
+                                        )}
                                     </div>
                                     <div className="hidden sm:block text-left">
                                         <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">{user?.username || user?.email || "Guest"}</p>

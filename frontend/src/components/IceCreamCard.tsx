@@ -4,13 +4,12 @@ type IceCreamCardProps = {
     name: string;
     description: string;
     price: number;
-    emoji?: string;
     image?: string;
     onViewDetail?: () => void;
     onAddToCart?: () => void;
 };
 
-function IceCreamCard({ name, description, price, emoji = "🍦", image, onViewDetail, onAddToCart }: IceCreamCardProps) {
+function IceCreamCard({ name, description, price, image, onViewDetail, onAddToCart }: IceCreamCardProps) {
     return (
         <div className="group relative h-80 w-full perspective-[1000px]">
             <div className="absolute duration-1000 w-full h-full transform-3d group-hover:transform-[rotateX(180deg)]">
@@ -20,13 +19,13 @@ function IceCreamCard({ name, description, price, emoji = "🍦", image, onViewD
                     className="absolute w-full h-full rounded-xl bg-linear-to-br from-pink-500 to-purple-500 p-6 text-white backface-hidden overflow-hidden text-left cursor-pointer"
                 >
                     {image && (
-                        <img src={image} alt={name} className="absolute inset-0 w-full h-full object-cover -z-10" />
+                        <>
+                            <img src={image} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
+                        </>
                     )}
-                    <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-start">
-                            <div className="text-3xl font-bold">{name}</div>
-                            <div className="text-5xl">{emoji}</div>
-                        </div>
+                    <div className="relative flex flex-col h-full">
+                        <div className="text-3xl font-bold">{name}</div>
                         <div className="mt-auto">
                             <p className="text-lg font-semibold">{formatIDR(price)}</p>
                             <p className="text-sm opacity-75">Hover to flip!</p>

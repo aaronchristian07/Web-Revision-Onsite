@@ -109,6 +109,11 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       NGINX_PORT: ${NGINX_PORT}
       JWT_SECRET: ${JWT_SECRET}
+      SEAWEED_S3_ENDPOINT: ${SEAWEED_S3_ENDPOINT}
+      SEAWEED_S3_PUBLIC_ENDPOINT: ${SEAWEED_S3_PUBLIC_ENDPOINT}
+      SEAWEED_ACCESS_KEY: ${SEAWEED_ACCESS_KEY}
+      SEAWEED_SECRET_KEY: ${SEAWEED_SECRET_KEY}
+      SEAWEED_PROFILE_BUCKET: ${SEAWEED_PROFILE_BUCKET}
     volumes:
       # source mount is what makes the air hot-reload in Dockerfile.dev useful
       - ./Backend/auth-services:/app
@@ -123,6 +128,8 @@ services:
       pgpool:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      seaweedfs:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:8001/health || exit 1"]

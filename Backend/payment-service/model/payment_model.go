@@ -17,6 +17,7 @@ type CartItem struct {
 type Order struct {
 	ID         string      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	UserID     string      `gorm:"type:varchar(255);not null;index"`
+	Username   string      `gorm:"type:varchar(255)"`
 	TotalPrice int         `gorm:"not null"`
 	Status     string      `gorm:"type:varchar(50);not null;default:'PAID'"`
 	CreatedAt  time.Time

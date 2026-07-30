@@ -20,6 +20,7 @@ export interface AuthResponse {
     username: string;
     email: string;
     role: string;
+    avatar_url: string;
 }
 
 export interface MessageResponse {
@@ -33,4 +34,17 @@ export interface User {
     // these still sit in localStorage without them
     email?: string;
     username?: string;
+    avatarUrl?: string;
+}
+
+export interface UserResponse {
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+    avatar_url: string;
+}
+
+export interface UpdateProfileRequest {
+    username: string;
 }

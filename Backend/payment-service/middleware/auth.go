@@ -9,9 +9,10 @@ import (
 )
 
 type JWTClaims struct {
-	Email  string `json:"email"`
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	Email    string `json:"email"`
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -29,6 +30,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				if claims, ok := token.Claims.(*JWTClaims); ok {
 					c.Set("user_id", claims.UserID)
 					c.Set("email", claims.Email)
+					c.Set("username", claims.Username)
 					c.Set("role", claims.Role)
 					c.Next()
 					return

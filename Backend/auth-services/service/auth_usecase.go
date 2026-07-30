@@ -107,6 +107,7 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		Username:     user.Username,
 		Email:        user.Email,
 		Role:         user.Role,
+		AvatarURL:    user.AvatarURL,
 	}, nil
 }
 
@@ -156,5 +157,52 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.Auth
 		Username:     user.Username,
 		Email:        user.Email,
 		Role:         user.Role,
+		AvatarURL:    user.AvatarURL,
+	}, nil
+}
+
+func (a *authService) UpdateProfile(ctx context.Context, userID string, req *dto.UpdateProfileRequest) (*dto.UserResponse, error) {
+	user, err := a.repo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, errors.New("user tidak ditemukan")
+	}
+
+	if req.Username != user.Username {
+		if existing, err := a.repo.FindByUsername(ctx, req.Username); err == nil && existing.ID != userID {
+			return nil, errors.New("username sudah dipakai")
+		}
+		user.Username = req.Username
+	}
+
+	if err := a.repo.UpdateUser(ctx, user); err != nil {
+		return nil, errors.New("gagal memperbarui profil")
+	}
+
+	return &dto.UserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      user.Role,
+		AvatarURL: user.AvatarURL,
+	}, nil
+}
+
+func (a *authService) UpdateAvatar(ctx context.Context, userID string, avatarURL string) (*dto.UserResponse, error) {
+	user, err := a.repo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, errors.New("user tidak ditemukan")
+	}
+
+	user.AvatarURL = avatarURL
+	if err := a.repo.UpdateUser(ctx, user); err != nil {
+		return nil, errors.New("gagal memperbarui foto profil")
+	}
+
+	return &dto.UserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      user.Role,
+		AvatarURL: user.AvatarURL,
 	}, nil
 }

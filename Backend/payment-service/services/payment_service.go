@@ -131,9 +131,10 @@ func (s *paymentService) RemoveCartItem(ctx context.Context, userID string, item
 	}, nil
 }
 
-func (s *paymentService) Checkout(ctx context.Context, userID string, req *dto.CheckoutRequest) (*dto.CheckoutResponse, error) {
+func (s *paymentService) Checkout(ctx context.Context, userID string, username string, req *dto.CheckoutRequest) (*dto.CheckoutResponse, error) {
 	order := &model.Order{
-		UserID: userID,
+		UserID:   userID,
+		Username: username,
 	}
 
 	if err := s.repo.CreateOrderWithItems(ctx, order, req.CartItemIDs); err != nil {
@@ -145,5 +146,107 @@ func (s *paymentService) Checkout(ctx context.Context, userID string, req *dto.C
 		TotalPrice: order.TotalPrice,
 		Status:     order.Status,
 		Message:    "Checkout berhasil diproses",
+	}, nil
+}
+
+func toOrderResponse(o *model.Order) dto.OrderResponse {
+	items := make([]dto.OrderItemResponse, 0, len(o.OrderItems))
+	for _, item := range o.OrderItems {
+		items = append(items, dto.OrderItemResponse{
+			IceCreamID:    item.IceCreamID,
+			IceCreamName:  item.IceCreamName,
+			IceCreamPrice: item.IceCreamPrice,
+			Quantity:      item.Quantity,
+			Subtotal:      item.Subtotal,
+		})
+	}
+
+	return dto.OrderResponse{
+		ID:         o.ID,
+		Username:   o.Username,
+		Status:     o.Status,
+		TotalPrice: o.TotalPrice,
+		CreatedAt:  o.CreatedAt,
+		Items:      items,
+	}
+}
+
+func (s *paymentService) ListMyOrders(ctx context.Context, userID string, req *dto.ListOrdersRequest) (*dto.ListOrdersResponse, error) {
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 10
+	}
+	page := req.Page
+	if page <= 0 {
+		page = 1
+	}
+
+	orders, total, err := s.repo.ListOrdersByUser(ctx, userID, page, limit)
+	if err != nil {
+		return nil, errors.New("gagal mengambil daftar transaksi")
+	}
+
+	items := make([]dto.OrderResponse, 0, len(orders))
+	for _, o := range orders {
+		items = append(items, toOrderResponse(o))
+	}
+
+	return &dto.ListOrdersResponse{Items: items, Total: total}, nil
+}
+
+func (s *paymentService) ListAllOrders(ctx context.Context, req *dto.ListOrdersRequest) (*dto.ListOrdersResponse, error) {
+	limit := req.Limit
+	if limit <= 0 || limit > 25 {
+		limit = 25
+	}
+	page := req.Page
+	if page <= 0 {
+		page = 1
+	}
+
+	orders, total, err := s.repo.ListAllOrders(ctx, req.Keyword, req.Status, req.DateFrom, req.DateTo, page, limit)
+	if err != nil {
+		return nil, errors.New("gagal mengambil daftar transaksi")
+	}
+
+	items := make([]dto.OrderResponse, 0, len(orders))
+	for _, o := range orders {
+		items = append(items, toOrderResponse(o))
+	}
+
+	return &dto.ListOrdersResponse{Items: items, Total: total}, nil
+}
+
+func (s *paymentService) UpdateOrderStatus(ctx context.Context, userID string, role string, orderID string, status string) (*dto.MessageResponse, error) {
+	if status == "" {
+		return nil, errors.New("status wajib diisi")
+	}
+
+	order, err := s.repo.GetOrderByID(ctx, orderID)
+	if err != nil {
+		return nil, errors.New("transaksi tidak ditemukan")
+	}
+
+	if role != "admin" && order.UserID != userID {
+		return nil, errors.New("tidak memiliki akses ke transaksi ini")
+	}
+
+	if err := s.repo.UpdateOrderStatus(ctx, orderID, status); err != nil {
+		return nil, errors.New("gagal memperbarui status transaksi")
+	}
+
+	return &dto.MessageResponse{Message: "Berhasil memperbarui status transaksi"}, nil
+}
+
+func (s *paymentService) GetOrderStats(ctx context.Context) (*dto.OrderStatsResponse, error) {
+	totalRevenue, totalOrders, pendingOrders, err := s.repo.GetOrderStats(ctx)
+	if err != nil {
+		return nil, errors.New("gagal mengambil statistik transaksi")
+	}
+
+	return &dto.OrderStatsResponse{
+		TotalRevenue:  totalRevenue,
+		TotalOrders:   totalOrders,
+		PendingOrders: pendingOrders,
 	}, nil
 }

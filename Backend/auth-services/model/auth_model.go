@@ -3,11 +3,12 @@ package model
 import "time"
 
 type User struct {
-	ID       string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Username string `gorm:"not null"`
-	Email    string `gorm:"uniqueIndex;not null"`
-	Password string `gorm:"not null"`
-	Role     string `gorm:"not null"`
+	ID        string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Username  string `gorm:"not null"`
+	Email     string `gorm:"uniqueIndex;not null"`
+	Password  string `gorm:"not null"`
+	Role      string `gorm:"not null"`
+	AvatarURL string `gorm:"type:text"`
 }
 
 type RefreshToken struct {
