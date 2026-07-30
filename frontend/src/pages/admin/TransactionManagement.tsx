@@ -19,7 +19,7 @@ function TransactionManagement() {
 
     const filtered = useMemo(() => {
         return transactions.filter((trx) => {
-            if (keyword && !`${trx.id} ${trx.customerName}`.toLowerCase().includes(keyword.toLowerCase())) return false;
+            if (keyword && !`${trx.id} ${trx.username}`.toLowerCase().includes(keyword.toLowerCase())) return false;
             if (status && trx.status !== status) return false;
             if (dateFrom && trx.date < dateFrom) return false;
             if (dateTo && trx.date > dateTo) return false;
@@ -56,7 +56,7 @@ function TransactionManagement() {
                         type="text"
                         value={keyword}
                         onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-                        placeholder="ID or customer name"
+                        placeholder="ID or username"
                         className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                     />
                 </div>
@@ -117,9 +117,9 @@ function TransactionManagement() {
                     <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 text-left">
                         <tr>
                             <th className="px-4 py-3 font-medium">ID</th>
-                            <th className="px-4 py-3 font-medium">Customer</th>
-                            <th className="px-4 py-3 font-medium">Date</th>
-                            <th className="px-4 py-3 font-medium">Total</th>
+                            <th className="px-4 py-3 font-medium">Username</th>
+                            <th className="px-4 py-3 font-medium">Date &amp; Time</th>
+                            <th className="px-4 py-3 font-medium">Final Payment</th>
                             <th className="px-4 py-3 font-medium">Status</th>
                             <th className="px-4 py-3 font-medium">Actions</th>
                         </tr>
@@ -128,8 +128,8 @@ function TransactionManagement() {
                         {pageItems.map((trx) => (
                             <tr key={trx.id} className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">{trx.id}</td>
-                                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{trx.customerName}</td>
-                                <td className="px-4 py-3 text-slate-500">{trx.date}</td>
+                                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{trx.username}</td>
+                                <td className="px-4 py-3 text-slate-500">{trx.date} {trx.time}</td>
                                 <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{formatIDR(trx.total)}</td>
                                 <td className="px-4 py-3">
                                     <StatusBadge status={trx.status} />
@@ -161,12 +161,16 @@ function TransactionManagement() {
             <Modal open={selected !== null} title={selected?.id ?? ""} onClose={() => setSelected(null)}>
                 {selected && (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm text-slate-500">
-                                {selected.customerName} &middot; {selected.date}
-                            </p>
-                            <StatusBadge status={selected.status} />
-                        </div>
+                        <dl className="grid grid-cols-2 gap-y-2 text-sm">
+                            <dt className="text-slate-400">Username</dt>
+                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{selected.username}</dd>
+
+                            <dt className="text-slate-400">Date &amp; Time</dt>
+                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{selected.date} {selected.time}</dd>
+
+                            <dt className="text-slate-400">Transaction State</dt>
+                            <dd><StatusBadge status={selected.status} /></dd>
+                        </dl>
 
                         <div className="divide-y divide-slate-100 dark:divide-slate-800">
                             {selected.items.map((item, i) => (
@@ -180,13 +184,13 @@ function TransactionManagement() {
                         </div>
 
                         <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <span className="font-semibold text-slate-800 dark:text-white">Total</span>
+                            <span className="font-semibold text-slate-800 dark:text-white">Final Payment Amount</span>
                             <span className="font-bold text-primary text-lg">{formatIDR(selected.total)}</span>
                         </div>
 
                         <div>
                             <label htmlFor="tm-change-status" className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                                Change Status
+                                Change Transaction State
                             </label>
                             <select
                                 id="tm-change-status"

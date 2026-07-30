@@ -41,13 +41,17 @@ function IceCreamCard({ name, description, price, emoji = "🍦", image, onViewD
                             <p className="text-lg">{description}</p>
                         </div>
                         <div className="flex justify-between items-center mt-auto">
-                            <button
-                                type="button"
-                                onClick={onAddToCart}
-                                className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-                            >
-                                Add to Cart
-                            </button>
+                            {onAddToCart ? (
+                                <button
+                                    type="button"
+                                    onClick={onAddToCart}
+                                    className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                            ) : (
+                                <span />
+                            )}
                             <span className="text-3xl">✨</span>
                         </div>
                     </div>

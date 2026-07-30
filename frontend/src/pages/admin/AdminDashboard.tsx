@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
+import IceCreamCard from "../../components/IceCreamCard";
+import IceCreamCardSkeleton from "../../components/IceCreamCardSkeleton";
 import Modal from "../../components/Modal";
 import Pagination from "../../components/Pagination";
 import { SAMPLE_ICE_CREAMS, SAMPLE_TRANSACTIONS, type IceCreamItem } from "../../lib/dummyData";
@@ -15,6 +17,7 @@ function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<IceCreamItem | null>(null);
 
+    // reset to page 1 and re-trigger the loading skeleton whenever the (debounced) search changes
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
     if (debouncedKeyword !== settledKeyword) {
         setSettledKeyword(debouncedKeyword);
@@ -47,8 +50,8 @@ function AdminDashboard() {
     const pendingCount = SAMPLE_TRANSACTIONS.filter((t) => t.status === "pending").length;
 
     const stats = [
-        { label: "Total Revenue", value: formatIDR(totalRevenue), icon: "solar:wallet-money-linear" },
-        { label: "Total Transactions", value: SAMPLE_TRANSACTIONS.length, icon: "solar:bill-list-linear" },
+        { label: "Transaction Analytics — Revenue", value: formatIDR(totalRevenue), icon: "solar:wallet-money-linear" },
+        { label: "Transaction Analytics — Total", value: SAMPLE_TRANSACTIONS.length, icon: "solar:bill-list-linear" },
         { label: "Ice Cream Variants", value: SAMPLE_ICE_CREAMS.length, icon: "solar:widget-add-linear" },
         { label: "Pending Orders", value: pendingCount, icon: "solar:hourglass-linear" },
     ];
@@ -67,7 +70,7 @@ function AdminDashboard() {
                 ))}
             </div>
 
-            <div className="relative max-w-md mb-6">
+            <div className="relative max-w-md mb-8">
                 <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="18" />
                 <input
                     type="text"
@@ -75,7 +78,7 @@ function AdminDashboard() {
                     onChange={(e) => setKeyword(e.target.value)}
                     placeholder="Search flavor or name..."
                     aria-label="Search ice cream"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-primary/30"
                 />
             </div>
 
@@ -83,22 +86,19 @@ function AdminDashboard() {
                 <p className="text-slate-500 py-16 text-center">No ice cream matches &quot;{debouncedKeyword}&quot;.</p>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading
-                    ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                          <div key={i} className="h-40 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
-                      ))
+                    ? Array.from({ length: PAGE_SIZE }).map((_, i) => <IceCreamCardSkeleton key={i} />)
                     : pageItems.map((item) => (
-                          <button
-                              type="button"
+                          <IceCreamCard
                               key={item.id}
-                              onClick={() => setSelected(item)}
-                              className="text-left p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors"
-                          >
-                              <div className="text-4xl mb-2">{item.emoji}</div>
-                              <p className="font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                              <p className="text-sm text-slate-500">{formatIDR(item.price)}</p>
-                          </button>
+                              name={item.name}
+                              description={item.description}
+                              price={item.price}
+                              emoji={item.emoji}
+                              image={item.image}
+                              onViewDetail={() => setSelected(item)}
+                          />
                       ))}
             </div>
 
@@ -106,8 +106,14 @@ function AdminDashboard() {
 
             <Modal open={selected !== null} title={selected?.name ?? ""} onClose={() => setSelected(null)}>
                 {selected && (
-                    <div className="space-y-3">
-                        <div className="text-5xl">{selected.emoji}</div>
+                    <div className="space-y-4">
+                        {selected.image ? (
+                            <img src={selected.image} alt={selected.name} className="w-full h-48 object-cover rounded-xl" />
+                        ) : (
+                            <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl">
+                                {selected.emoji}
+                            </div>
+                        )}
                         <p className="text-slate-600 dark:text-slate-300">{selected.description}</p>
                         <p className="text-sm text-slate-400">Flavor: {selected.flavor}</p>
                         <p className="text-xl font-bold text-primary">{formatIDR(selected.price)}</p>
