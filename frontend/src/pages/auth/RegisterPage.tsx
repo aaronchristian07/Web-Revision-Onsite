@@ -3,6 +3,7 @@ import { useNavigate } from "react-router"
 import { register } from "../../api/authApi";
 import { useAuthStore } from "../../lib/authStore";
 import { parseApiError } from "../../lib/error";
+import Footer from "../../components/Footer";
 
 function RegisterPage() {
     const navigate = useNavigate();
@@ -60,7 +61,8 @@ function RegisterPage() {
     }
 
     return (
-        <div className="min-h-screen min-w-screen flex flex-row justify-center items-center">
+        <div className="min-h-screen min-w-screen flex flex-col">
+        <div className="flex-1 flex flex-row justify-center items-center">
             <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0 w-full">
             <div className="w-full bg-white rounded-lg shadow border md:mt-0 sm:max-w-md xl:p-0">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -138,6 +140,8 @@ function RegisterPage() {
                     <p className="mt-8 font-serif text-red-500 text-md">{error}</p>
                 }
             </div>
+        </div>
+        <Footer />
         </div>
     )
 }

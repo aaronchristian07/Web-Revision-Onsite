@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 interface ModalProps {
     open: boolean;
@@ -9,6 +9,15 @@ interface ModalProps {
 }
 
 function Modal({ open, title, onClose, children }: ModalProps) {
+    useEffect(() => {
+        if (!open) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [open, onClose]);
+
     if (!open) return null;
 
     return (

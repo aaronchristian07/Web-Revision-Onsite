@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { login } from "../../api/authApi";
 import { useAuthStore } from "../../lib/authStore";
 import { parseApiError } from "../../lib/error";
+import Footer from "../../components/Footer";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -52,7 +53,8 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen min-w-screen flex flex-col justify-center items-center">
+    <div className="min-h-screen min-w-screen flex flex-col">
+      <div className="flex-1 flex flex-col justify-center items-center">
       <div className="max-w-md relative flex flex-col p-20 rounded-xl text-black bg-white  border border-black">
           <div className="text-2xl font-bold mb-2 text-[#1e0e4b] text-center">Welcome back to <span className="text-[#7747ff]">ESkrim</span></div>
           <div className="text-sm font-normal mb-4 text-center text-[#1e0e4b]">Log in to your account</div>
@@ -105,6 +107,8 @@ function LoginPage() {
       {error !== "" &&
         <p className="mt-8 font-serif text-red-500 text-md">{error}</p>
       }
+      </div>
+      <Footer />
     </div>
   )
 }
