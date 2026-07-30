@@ -1,23 +1,18 @@
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router"
+import { Navigate, Outlet } from "react-router"
 import { useAuthStore } from "../../lib/authStore";
 
 const AdminRoute = () => {
-    const logout = useAuthStore((s) => s.logout);
-    const user = useAuthStore.getState().user
-    const navigate = useNavigate()
+    // same as ProtectedRoute: subscribed read, redirect during render, so a
+    // non-admin never gets a frame of the admin pages
+    const user = useAuthStore((s) => s.user);
 
-    useEffect(() => {
-        if (!user) {
-            logout()
-            navigate("/auth/login")
-            return
-        }
-        if (user.role != "admin") {
-            navigate("/dashboard")
-            return
-        }
-    }, [])
+    if (!user) {
+        return <Navigate to="/auth/login" replace />
+    }
+
+    if (user.role !== "admin") {
+        return <Navigate to="/dashboard" replace />
+    }
 
     return (
         <Outlet />

@@ -81,9 +81,10 @@ func (a *authUsecase) ValidateToken(c *gin.Context) {
 // Me echoes back the identity AuthMiddleware pulled off the access token.
 func (a *authUsecase) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"user_id": c.GetString("user_id"),
-		"email":   c.GetString("email"),
-		"role":    c.GetString("role"),
+		"user_id":  c.GetString("user_id"),
+		"email":    c.GetString("email"),
+		"username": c.GetString("username"),
+		"role":     c.GetString("role"),
 	})
 }
 

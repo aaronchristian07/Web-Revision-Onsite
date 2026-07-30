@@ -2,10 +2,12 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { SAMPLE_ICE_CREAMS } from "../lib/dummyData";
 import { formatIDR } from "../lib/format";
+import { useAuthStore } from "../lib/authStore";
 
 function ProfilePage() {
-    const [username, setUsername] = useState("ON AO CJ KY MT");
-    const [email, setEmail] = useState("developer@gmail.com");
+    const user = useAuthStore((state) => state.user);
+    const [username, setUsername] = useState(user?.username ?? "");
+    const [email, setEmail] = useState(user?.email ?? "");
     const [saved, setSaved] = useState(false);
 
     const recentIceCreams = SAMPLE_ICE_CREAMS.slice(0, 5);
@@ -24,7 +26,7 @@ function ProfilePage() {
                 <div>
                     <p className="text-lg font-semibold text-slate-800 dark:text-white">{username}</p>
                     <p className="text-sm text-slate-500">{email}</p>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">Role: Customer</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">Role: {user?.role ?? "-"}</p>
                 </div>
             </div>
 

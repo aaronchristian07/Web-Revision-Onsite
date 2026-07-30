@@ -62,6 +62,10 @@ const router = createBrowserRouter([
           element: <Layout navItems={ADMIN_NAV_ITEMS} pageHeaders={ADMIN_PAGE_HEADERS} />,
           children: [
             {
+              path: "admin",
+              element: <Navigate to="/admin/dashboard" replace />
+            },
+            {
               path: "admin/dashboard",
               element: <AdminDashboard />
             },

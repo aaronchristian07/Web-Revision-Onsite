@@ -17,6 +17,8 @@ export interface AuthResponse {
     access_token: string;
     refresh_token: string;
     user_id: string;
+    username: string;
+    email: string;
     role: string;
 }
 
@@ -27,7 +29,8 @@ export interface MessageResponse {
 export interface User {
     userId: string;
     role: string;
-    // only /auth/me returns these; login does not
+    // optional because sessions persisted before login started returning
+    // these still sit in localStorage without them
     email?: string;
     username?: string;
 }

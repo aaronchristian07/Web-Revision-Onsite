@@ -24,11 +24,12 @@ func NewAuthService(repo repository.AuthRepoInterface, jwtSecret string) AuthSer
 	return &authService{repo: repo, jwtSecret: jwtSecret}
 }
 
-func (a *authService) generateAccessToken(userid, email, role string) (string, error) {
+func (a *authService) generateAccessToken(userid, email, username, role string) (string, error) {
 	claims := &Claims{
-		Email:  email,
-		UserID: userid,
-		Role:   role,
+		Email:    email,
+		UserID:   userid,
+		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -81,7 +82,7 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, errors.New("gagal bcrypt")
 	}
 
-	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Role)
+	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Username, user.Role)
 	if err != nil {
 		return nil, errors.New("generated accesstoken gagal")
 	}
@@ -103,6 +104,8 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		AccessToken:  accessToken,
 		RefreshToken: refreshTokenID,
 		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
 		Role:         user.Role,
 	}, nil
 }
@@ -116,10 +119,11 @@ func (a *authService) ValidateToken(ctx context.Context, token string) (*dto.Val
 	}
 
 	return &dto.ValidateTokenResponse{
-		Valid:  true,
-		Email:  claims.Email,
-		UserID: claims.UserID,
-		Role:   claims.Role,
+		Valid:    true,
+		Email:    claims.Email,
+		UserID:   claims.UserID,
+		Username: claims.Username,
+		Role:     claims.Role,
 	}, nil
 
 }
@@ -140,7 +144,7 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.Auth
 		return nil, errors.New("tidak ketemu user itu")
 	}
 
-	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Role)
+	accessToken, err := a.generateAccessToken(user.ID, user.Email, user.Username, user.Role)
 	if err != nil {
 		return nil, errors.New("access token failed to generate")
 	}
@@ -149,6 +153,8 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*dto.Auth
 		AccessToken:  accessToken,
 		RefreshToken: token,
 		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
 		Role:         user.Role,
 	}, nil
 }
