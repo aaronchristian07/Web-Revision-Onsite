@@ -175,6 +175,41 @@ services:
     image: onsite-frontend:latest
     environment:
       VITE_API_URL: ${VITE_API_URL}
+  payment-service:
+    container_name: onsite-payment
+    build:
+      context: ./Backend/payment-service
+      dockerfile: Dockerfile.dev
+    image: payment-service:latest
+    environment:
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
+      PAYMENT_SERVICE_PORT: ${PAYMENT_SERVICE_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - ${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}
+    networks:
+      - onsite-net
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      pgpool:
+        condition: service_started
+      nginx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:${PAYMENT_SERVICE_PORT}/health || exit 1"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: onsite-seaweed
+    command: "server -s3 -s3.config=/etc/seaweedfs/s3-config.json -dir=/data -master.volumeSizeLimitMB=100"
+    ports:
+      - "9333:9333"
+      - "8888:8888"
+      - "8333:8333"
     volumes:
       - ./frontend:/app
       # keep the image's node_modules - don't let the host mount shadow it
