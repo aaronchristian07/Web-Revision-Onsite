@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { Link } from "react-router";
+import { createTransaction } from "../api/transactionApi";
 import { useCartStore } from "../lib/cartStore";
 import { formatIDR } from "../lib/format";
 
@@ -14,22 +15,33 @@ function Cart() {
 
     const [confirmation, setConfirmation] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [checkingOut, setCheckingOut] = useState(false);
 
     const selectedItems = items.filter((item) => item.selected);
     const total = selectedItems.reduce((sum, item) => sum + item.price * item.qty, 0);
     const allSelected = items.length > 0 && items.every((item) => item.selected);
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (selectedItems.length === 0) {
             setError("Pilih minimal satu item sebelum checkout.");
             setConfirmation(null);
             return;
         }
         setError(null);
-        setConfirmation(
-            `Checkout berhasil untuk ${selectedItems.length} item (${formatIDR(total)}). Transaksi ini masih dummy — belum tersambung ke backend.`
-        );
-        clearSelected();
+        setCheckingOut(true);
+        try {
+            // TODO: pakai username dari authStore begitu login beneran kepasang (Fase 2)
+            const created = await createTransaction({
+                username: "guest_customer",
+                items: selectedItems.map((item) => ({ iceCreamName: item.name, qty: item.qty, price: item.price })),
+            });
+            setConfirmation(
+                `Checkout berhasil (${created.id}) untuk ${selectedItems.length} item (${formatIDR(created.total)}). Transaksi ini bisa dicek di halaman Order — masih data mock, belum backend asli.`
+            );
+            clearSelected();
+        } finally {
+            setCheckingOut(false);
+        }
     };
 
     if (items.length === 0) {
@@ -134,10 +146,11 @@ function Cart() {
                 </div>
                 <button
                     type="button"
-                    onClick={handleCheckout}
-                    className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
+                    onClick={() => { void handleCheckout(); }}
+                    disabled={checkingOut}
+                    className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                 >
-                    Checkout Selected
+                    {checkingOut ? "Processing..." : "Checkout Selected"}
                 </button>
             </div>
         </div>
