@@ -161,11 +161,37 @@ services:
       seaweedfs:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:${ICE_SERVICE_PORT}/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  payment-service:
+    container_name: onsite-payment
+    build:
+      context: ./Backend/payment-service
+      dockerfile: Dockerfile.dev
+    image: payment-service:latest
+    environment:
+      DB_STRING: "host=pgpool user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432"
+      PAYMENT_SERVICE_PORT: ${PAYMENT_SERVICE_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - ${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}
+    networks:
+      - onsite-net
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      pgpool:
+        condition: service_started
+      nginx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:${PAYMENT_SERVICE_PORT}/health || exit 1"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
 
   frontend:
     container_name: onsite-frontend
