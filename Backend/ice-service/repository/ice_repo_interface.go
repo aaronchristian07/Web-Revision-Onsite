@@ -10,5 +10,6 @@ type IceRepoInterface interface {
 	UpdateIceCream(ctx context.Context, req *model.IceCream) error
 	DeleteIceCream(ctx context.Context, id string) error
 	FindByID(ctx context.Context, id string) (*model.IceCream, error)
-	GetIceCreamMenu(ctx context.Context, limit int, page int) ([]*model.IceCream, error)
+	CountIceCream(ctx context.Context , keyword string) (int64,error)
+	GetIceCreamMenu(ctx context.Context, keyword string, limit int, page int) ([]*model.IceCream, error)
 }
