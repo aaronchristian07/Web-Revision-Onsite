@@ -35,11 +35,25 @@ services:
       PGPOOL_PARAMS_ENABLE_POOL_HBA: 'off'
       PGPOOL_PARAMS_ALLOW_CLEAR_TEXT_FRONTEND_AUTH: 'on'
 
-      PGPOOL_PARAMS_PCP_USER: ${PGPOOL_PCP_USER}
-      PGPOOL_PARAMS_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
+      # PCP creds are NOT PGPOOL_PARAMS_* - that prefix is for pgpool.conf
+      # settings only. With the wrong names the entrypoint silently logs
+      # "Skip generating pcp.conf" and PCP admin is left unconfigured.
+      PGPOOL_PCP_USER: ${PGPOOL_PCP_USER}
+      PGPOOL_PCP_PASSWORD: ${PGPOOL_PCP_PASSWORD}
 
     networks:
       - onsite-net
+    # pgpool refuses to start if it finds a stale pgpool.pid, which survives an
+    # unclean stop because it lives in the container's writable layer. Backing
+    # the directory with tmpfs means it can never outlive the process.
+    tmpfs:
+      - /var/run/pgpool:mode=1777
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -107,7 +121,7 @@ services:
       postgres-master:
         condition: service_healthy
       pgpool:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -143,7 +157,7 @@ services:
       postgres-master:
         condition: service_healthy
       pgpool:
-        condition: service_started
+        condition: service_healthy
       seaweedfs:
         condition: service_healthy
     healthcheck:
@@ -170,7 +184,9 @@ services:
     networks:
       - onsite-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:5173/ >/dev/null || exit 1"]
+      # 127.0.0.1, not localhost: localhost resolves to ::1 in this image and
+      # vite --host 0.0.0.0 binds IPv4 only, so the v6 probe is refused
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5173/ >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

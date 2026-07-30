@@ -8,7 +8,6 @@ type RegisterRequest struct {
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Username string `json:"username" binding:"required,min=3"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
@@ -24,7 +23,7 @@ type AuthResponse struct {
 }
 
 type ValidateTokenResponse struct {
-	Valid  bool   `json;"valid"`
+	Valid  bool   `json:"valid"`
 	Email  string `json:"email"`
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`

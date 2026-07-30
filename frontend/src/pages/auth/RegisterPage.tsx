@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router"
+import { registerApi } from "../../api/authApi";
+import type { RegisterRequest } from "../../dto/authDto";
 
 function RegisterPage() {
     const navigate = useNavigate();
@@ -25,8 +27,9 @@ function RegisterPage() {
             setError("Invalid email address")
             return false;
         }
-        if (password == "" || password.length < 5 || password.length > 30) {
-            setError("Password must be between 5 and 30 characters")
+        // backend enforces min=6, so reject here rather than round-trip a 400
+        if (password.length < 6 || password.length > 30) {
+            setError("Password must be between 6 and 30 characters")
             return false;
         }
         if (password !== confirmPassword) {
@@ -37,16 +40,24 @@ function RegisterPage() {
         return true;
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (loading) return;
         setLoading(true)
         setError("")
         try {
         if (!validateInputs()) return;
 
-        // todo: register api
+        const req: RegisterRequest = {
+            email: email,
+            password: password,
+            username: username
+        }
 
-        navigate("/dashboard")
+        // register returns no token - send them through login to get one
+        const response = await registerApi({req, setError})
+        if (response) {
+            navigate("/auth/login")
+        }
 
         } finally {
         setLoading(false)

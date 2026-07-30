@@ -58,7 +58,7 @@ func (a *authUsecase) Login(c *gin.Context) {
 
 func (a *authUsecase) ValidateToken(c *gin.Context) {
 	var body struct {
-		Token string `json:"token" binding:"required:`
+		Token string `json:"token" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -76,6 +76,15 @@ func (a *authUsecase) ValidateToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// Me echoes back the identity AuthMiddleware pulled off the access token.
+func (a *authUsecase) Me(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"user_id": c.GetString("user_id"),
+		"email":   c.GetString("email"),
+		"role":    c.GetString("role"),
+	})
 }
 
 func (a *authUsecase) RefreshToken(c *gin.Context) {

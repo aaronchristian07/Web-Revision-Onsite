@@ -2,22 +2,25 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { loginApi } from "../../api/authApi";
 import type { LoginRequest } from "../../dto/authDto";
+import { useAuthStore } from "../../lib/authStore";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const setSession = useAuthStore((s) => s.setSession);
 
-  const [identifier, setIdentifier] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const validateInputs = (): boolean => {
-    if (identifier == "" || identifier.length < 5 || identifier.length > 30) {
-      setError("Identifier must be between 5 and 30 characters")
+    if (!email.includes("@") || email == "") {
+      setError("Invalid email address")
       return false;
     }
-    if (password == "" || password.length < 5 || password.length > 30) {
-      setError("Password must be between 5 and 30 characters")
+    // backend enforces min=6, so reject here rather than round-trip a 400
+    if (password.length < 6 || password.length > 30) {
+      setError("Password must be between 6 and 30 characters")
       return false;
     }
     return true;
@@ -35,12 +38,13 @@ function LoginPage() {
       if (!validateInputs()) return;
 
       const req: LoginRequest = {
-        identifier: identifier,
+        email: email,
         password: password
       }
 
       const response = await loginApi({req, setError})
       if (response) {
+        setSession(response)
         navigate("/dashboard")
       }
 
@@ -56,13 +60,13 @@ function LoginPage() {
           <div className="text-sm font-normal mb-4 text-center text-[#1e0e4b]">Log in to your account</div>
         <div className="flex flex-col gap-3">
             <div className="block relative"> 
-            <label htmlFor="identifier" className="block text-gray-600 cursor-text text-sm leading-[140%] font-normal mb-2">Username/Email</label>
+            <label htmlFor="email" className="block text-gray-600 cursor-text text-sm leading-[140%] font-normal mb-2">Email</label>
             <input
-              type="text"
-              id="identifier"
+              type="email"
+              id="email"
               className="rounded border border-gray-200 text-sm w-full font-normal leading-4.5 text-black tracking-normal appearance-none block h-11 m-0 p-2.75 focus:ring-2 ring-offset-2  ring-gray-900 outline-0"
-              value={identifier}
-              onChange={(e)=>setIdentifier(e.target.value)}
+              value={email}
+              onChange={(e)=>setEmail(e.target.value)}
             />
             
             </div>
