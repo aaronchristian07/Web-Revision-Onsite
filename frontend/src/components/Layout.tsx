@@ -1,19 +1,26 @@
 import { Icon } from "@iconify/react";
-import { useState } from "react";
-import { Outlet } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
+
+const NAV_ITEMS = [
+    { to: "/dashboard", label: "Shop", icon: "solar:widget-add-linear" },
+    { to: "/cart", label: "Cart", icon: "solar:bed-linear", badge: 0 },
+    { to: "/history", label: "History", icon: "solar:users-group-rounded-linear" },
+];
+
+const PAGE_HEADERS: Record<string, { title: string; breadcrumb: string }> = {
+    "/dashboard": { title: "Shop - Take a look at our delicious Ice Cream", breadcrumb: "Overview" },
+    "/cart": { title: "Cart - Your Queue Items", breadcrumb: "Cart" },
+    "/history": { title: "History - My Orders!", breadcrumb: "History" },
+};
+
+const TAB_THEMES = {
+    disabled: "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group",
+    enabled: "flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group",
+}
 
 function Layout() {
-    const [tab, setTab] = useState<number>(0);
-
-    const TAB_THEMES = {
-        disabled: "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group",
-        enabled: "flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group",
-    }
-
-    const selectTabTheme = (localTab: number) => {
-        if (tab == localTab) return TAB_THEMES["enabled"]
-        else return TAB_THEMES["disabled"]
-    }
+    const location = useLocation();
+    const pageHeader = PAGE_HEADERS[location.pathname] ?? PAGE_HEADERS["/dashboard"];
 
     return(
         <div>
@@ -33,34 +40,22 @@ function Layout() {
                         </div>
                     </div>
 
-                    <nav className="flex-1 py-6 px-4 space-y-1 bg-pink-100">
+                    <nav className="flex-1 py-6 px-4 space-y-1">
                         <div className="px-4 mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider">Main Menu</div>
-                        
-                        <div
-                            onClick={() => setTab(0)}>
-                            <a className={selectTabTheme(0)}>
-                                <Icon icon="solar:widget-add-linear" width="20" stroke-width="1.5"></Icon>
-                                Shop
-                            </a>
-                        </div>
-                        
-                        <div
-                            onClick={() => setTab(1)}>
-                            <a className={selectTabTheme(1)}>
-                                <Icon icon="solar:bed-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                                Cart
-                                <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">0</span>
-                            </a>
-                        </div>
-                        
-                        <div
-                            onClick={() => setTab(2)}>
-                            <a className={selectTabTheme(2)}>
-                                <Icon icon="solar:users-group-rounded-linear" width="20" stroke-width="1.5" className="group-hover:text-primary transition-colors"></Icon>
-                                History
-                            </a>
 
-                        </div>
+                        {NAV_ITEMS.map((item) => (
+                            <Link
+                                key={item.to}
+                                to={item.to}
+                                className={location.pathname === item.to ? TAB_THEMES.enabled : TAB_THEMES.disabled}
+                            >
+                                <Icon icon={item.icon} width="20" className="group-hover:text-primary transition-colors"></Icon>
+                                {item.label}
+                                {item.badge !== undefined && (
+                                    <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">{item.badge}</span>
+                                )}
+                            </Link>
+                        ))}
                     </nav>
                 </aside>
 
@@ -73,11 +68,11 @@ function Layout() {
                             </label>
 
                             <div className="hidden sm:block">
-                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">Shop - Take a look at our delicious Ice Cream</h1>
+                                <h1 className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight">{pageHeader.title}</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>Home</span>
                                     <Icon icon="solar:alt-arrow-right-linear" width="12"></Icon>
-                                    <span className="text-primary font-medium">Overview</span>
+                                    <span className="text-primary font-medium">{pageHeader.breadcrumb}</span>
                                 </div>
                             </div>
                         </div>
