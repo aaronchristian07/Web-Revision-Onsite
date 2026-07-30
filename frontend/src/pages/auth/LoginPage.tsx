@@ -69,7 +69,7 @@ function LoginPage() {
             <div className="block relative">
             <label htmlFor="password" className="block text-gray-600 cursor-text text-sm leading-[140%] font-normal mb-2">Password</label>
             <input
-              type="text"
+              type="password"
               id="password"
               className="rounded border border-gray-200 text-sm w-full font-normal leading-4.5 text-black tracking-normal appearance-none block h-11 m-0 p-2.75 focus:ring-2 ring-offset-2 ring-gray-900 outline-0"
               value={password}
