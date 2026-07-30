@@ -45,7 +45,7 @@ function LoginPage() {
       const response = await loginApi({req, setError})
       if (response) {
         setSession(response)
-        navigate("/dashboard")
+        navigate(response.role === "admin" ? "/admin/dashboard" : "/dashboard")
       }
 
     } finally {

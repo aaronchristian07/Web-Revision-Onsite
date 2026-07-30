@@ -1,19 +1,14 @@
-import { useEffect } from "react"
-import { Outlet, useNavigate } from "react-router"
+import { Navigate, Outlet } from "react-router"
 import { useAuthStore } from "../../lib/authStore"
 
 const ProtectedRoute = () => {
-    const logout = useAuthStore((s) => s.logout);
-    const accessToken = useAuthStore.getState().accessToken
-    const navigate = useNavigate()
+    // subscribe rather than getState() so a logout anywhere re-renders this
+    // guard, and decide during render so children never mount unauthenticated
+    const accessToken = useAuthStore((s) => s.accessToken)
 
-    useEffect(() => {
-        if (!accessToken) {
-            logout()
-            navigate("/auth/login")
-        }
-            
-    }, [])
+    if (!accessToken) {
+        return <Navigate to="/auth/login" replace />
+    }
 
     return (
         <Outlet />

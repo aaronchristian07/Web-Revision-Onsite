@@ -20,7 +20,12 @@ export const useAuthStore = create<AuthState>()(
             // single place the API's snake_case gets translated
             setSession: (res) =>
                 set({
-                    user: { userId: res.user_id, role: res.role },
+                    user: {
+                        userId: res.user_id,
+                        role: res.role,
+                        username: res.username,
+                        email: res.email,
+                    },
                     accessToken: res.access_token,
                     refreshToken: res.refresh_token,
                 }),

@@ -19,14 +19,17 @@ type AuthResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	UserID       string `json:"user_id"`
+	Username     string `json:"username"`
+	Email        string `json:"email"`
 	Role         string `json:"role"`
 }
 
 type ValidateTokenResponse struct {
-	Valid  bool   `json:"valid"`
-	Email  string `json:"email"`
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	Valid    bool   `json:"valid"`
+	Email    string `json:"email"`
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 }
 
 type MessageResponse struct {

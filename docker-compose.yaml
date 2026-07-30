@@ -166,6 +166,31 @@ services:
       retries: 10
       start_period: 40s
 
+  frontend:
+    container_name: onsite-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: onsite-frontend:latest
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    volumes:
+      - ./frontend:/app
+      # keep the image's node_modules - don't let the host mount shadow it
+      - frontend-node-modules:/app/node_modules
+    ports:
+      - ${FRONTEND_PORT}:5173
+    networks:
+      - onsite-net
+    healthcheck:
+      # 127.0.0.1, not localhost: localhost resolves to ::1 in this image and
+      # vite --host 0.0.0.0 binds IPv4 only, so the v6 probe is refused
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5173/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   payment-service:
     container_name: onsite-payment
     build:
@@ -192,31 +217,6 @@ services:
       timeout: 20s
       retries: 10
       interval: 30s
-
-  frontend:
-    container_name: onsite-frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    image: onsite-frontend:latest
-    environment:
-      VITE_API_URL: ${VITE_API_URL}
-    volumes:
-      - ./frontend:/app
-      # keep the image's node_modules - don't let the host mount shadow it
-      - frontend-node-modules:/app/node_modules
-    ports:
-      - ${FRONTEND_PORT}:5173
-    networks:
-      - onsite-net
-    healthcheck:
-      # 127.0.0.1, not localhost: localhost resolves to ::1 in this image and
-      # vite --host 0.0.0.0 binds IPv4 only, so the v6 probe is refused
-      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5173/ >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   nginx:
     image: nginx:1.31.2-alpine

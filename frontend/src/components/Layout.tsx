@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { Link, Outlet, useLocation } from "react-router";
 import Footer from "./Footer";
 import { useCartStore } from "../lib/cartStore";
+import { useAuthStore } from "../lib/authStore";
 import { CUSTOMER_NAV_ITEMS, CUSTOMER_PAGE_HEADERS, type NavItem, type PageHeader } from "../lib/navConfig";
 
 const TAB_THEMES = {
@@ -17,6 +18,7 @@ interface LayoutProps {
 function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEADERS }: LayoutProps) {
     const location = useLocation();
     const cartCount = useCartStore((state) => state.items.length);
+    const user = useAuthStore((state) => state.user);
     const pageHeader = pageHeaders[location.pathname] ?? Object.values(pageHeaders)[0];
 
     return (
@@ -88,8 +90,8 @@ function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEA
                                         <Icon icon="solar:user-linear" width="18" />
                                     </div>
                                     <div className="hidden sm:block text-left">
-                                        <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">ON AO CJ KY MT</p>
-                                        <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wide">DEVELOPER</p>
+                                        <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">{user?.username || user?.email || "Guest"}</p>
+                                        <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wide">{user?.role ?? ""}</p>
                                     </div>
                                     <Icon icon="solar:alt-arrow-down-linear" className="text-slate-400 text-xs hidden sm:block"></Icon>
                                 </Link>
