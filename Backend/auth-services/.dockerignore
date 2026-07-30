@@ -1,0 +1,8 @@
+# never bake secrets into the image - compose supplies these at runtime
+.env
+.env.*
+!.env.example
+tmp
+.git
+Dockerfile*
+.dockerignore

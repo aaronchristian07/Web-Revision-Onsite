@@ -1,0 +1,14 @@
+FROM node:24-alpine
+
+WORKDIR /app
+
+# install deps in their own layer so source edits don't re-run npm ci
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 5173
+
+# --host binds 0.0.0.0 so the port is reachable from outside the container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
