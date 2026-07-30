@@ -1,8 +1,8 @@
 root = "."
 tmp_dir = "tmp"
 
-[builds]
-    cmd = "go build -o ./tmp/main ."
+[build]
+    cmd = "go build -o ./tmp/main ./cmd"
     entrypoint = ["./tmp/main"] 
     include_ext = ["go"]
     exclude_dir = ["tmp"]
