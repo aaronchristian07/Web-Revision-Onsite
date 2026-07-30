@@ -1,26 +1,112 @@
+import { useEffect, useMemo, useState } from "react";
+import { Icon } from "@iconify/react";
 import IceCreamCard from "../components/IceCreamCard";
+import IceCreamCardSkeleton from "../components/IceCreamCardSkeleton";
+import Modal from "../components/Modal";
+import Pagination from "../components/Pagination";
+import { SAMPLE_ICE_CREAMS, type IceCreamItem } from "../lib/dummyData";
+import { useDebounce } from "../lib/useDebounce";
+import { useCartStore } from "../lib/cartStore";
+import { formatIDR } from "../lib/format";
 
-const SAMPLE_ICE_CREAMS = [
-  { name: "Caramel Pecan", emoji: "🌰", description: "Buttered pecans swirled into rich caramel ice cream." },
-  { name: "Matcha Dream", emoji: "🍵", description: "Earthy matcha with a hint of white chocolate." },
-  { name: "Strawberry Swirl", emoji: "🍓", description: "Fresh strawberry ribbons in a creamy vanilla base." },
-  { name: "Choco Lava", emoji: "🍫", description: "Dark chocolate ice cream with a molten fudge center." },
-  { name: "Mango Tango", emoji: "🥭", description: "Tropical mango sorbet with a citrus twist." },
-  { name: "Blueberry Bliss", emoji: "🫐", description: "Wild blueberries blended into smooth cheesecake ice cream." },
-  { name: "Mint Choco Chip", emoji: "🌿", description: "Cool mint ice cream loaded with chocolate chips." },
-  { name: "Vanilla Bean", emoji: "🌼", description: "Classic Madagascar vanilla bean, simple and rich." },
-];
+const PAGE_SIZE = 8;
 
 function Dashboard() {
-  return (
-    <div className="flex flex-row flex-wrap">
-      {SAMPLE_ICE_CREAMS.map((item) => (
-        <div className="p-10" key={item.name}>
-          <IceCreamCard {...item} />
+    const [keyword, setKeyword] = useState("");
+    const debouncedKeyword = useDebounce(keyword, 400);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState<IceCreamItem | null>(null);
+    const addItem = useCartStore((state) => state.addItem);
+
+    // reset to page 1 and re-trigger the loading skeleton whenever the (debounced) search changes
+    const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
+    if (debouncedKeyword !== settledKeyword) {
+        setSettledKeyword(debouncedKeyword);
+        setPage(1);
+        setLoading(true);
+    }
+
+    const filtered = useMemo(() => {
+        const kw = debouncedKeyword.trim().toLowerCase();
+        if (!kw) return SAMPLE_ICE_CREAMS;
+        return SAMPLE_ICE_CREAMS.filter(
+            (item) => item.name.toLowerCase().includes(kw) || item.flavor.toLowerCase().includes(kw)
+        );
+    }, [debouncedKeyword]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => setLoading(false), 500);
+        return () => clearTimeout(timeout);
+    }, [debouncedKeyword, page]);
+
+    const handlePageChange = (nextPage: number) => {
+        setLoading(true);
+        setPage(nextPage);
+    };
+
+    return (
+        <div className="flex-1 px-10 py-10">
+            <div className="relative max-w-md mb-8">
+                <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="18" />
+                <input
+                    type="text"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="Search flavor or name..."
+                    aria-label="Search ice cream"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+            </div>
+
+            {!loading && pageItems.length === 0 && (
+                <p className="text-slate-500 py-16 text-center">No ice cream matches &quot;{debouncedKeyword}&quot;.</p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {loading
+                    ? Array.from({ length: PAGE_SIZE }).map((_, i) => <IceCreamCardSkeleton key={i} />)
+                    : pageItems.map((item) => (
+                          <IceCreamCard
+                              key={item.id}
+                              name={item.name}
+                              description={item.description}
+                              price={item.price}
+                              emoji={item.emoji}
+                              image={item.image}
+                              onViewDetail={() => setSelected(item)}
+                              onAddToCart={() => addItem(item)}
+                          />
+                      ))}
+            </div>
+
+            {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
+
+            <Modal open={selected !== null} title={selected?.name ?? ""} onClose={() => setSelected(null)}>
+                {selected && (
+                    <div className="space-y-4">
+                        <div className="text-5xl">{selected.emoji}</div>
+                        <p className="text-slate-600 dark:text-slate-300">{selected.description}</p>
+                        <p className="text-sm text-slate-400">Flavor: {selected.flavor}</p>
+                        <p className="text-xl font-bold text-primary">{formatIDR(selected.price)}</p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                addItem(selected);
+                                setSelected(null);
+                            }}
+                            className="w-full py-2.5 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Add to Cart
+                        </button>
+                    </div>
+                )}
+            </Modal>
         </div>
-      ))}
-    </div>
-  );
+    );
 }
 
 export default Dashboard;

@@ -1,31 +1,28 @@
 import { Icon } from "@iconify/react";
 import { Link, Outlet, useLocation } from "react-router";
-
-const NAV_ITEMS = [
-    { to: "/dashboard", label: "Shop", icon: "solar:widget-add-linear" },
-    { to: "/cart", label: "Cart", icon: "solar:bed-linear", badge: 0 },
-    { to: "/history", label: "History", icon: "solar:users-group-rounded-linear" },
-];
-
-const PAGE_HEADERS: Record<string, { title: string; breadcrumb: string }> = {
-    "/dashboard": { title: "Shop - Take a look at our delicious Ice Cream", breadcrumb: "Overview" },
-    "/cart": { title: "Cart - Your Queue Items", breadcrumb: "Cart" },
-    "/history": { title: "History - My Orders!", breadcrumb: "History" },
-};
+import Footer from "./Footer";
+import { useCartStore } from "../lib/cartStore";
+import { CUSTOMER_NAV_ITEMS, CUSTOMER_PAGE_HEADERS, type NavItem, type PageHeader } from "../lib/navConfig";
 
 const TAB_THEMES = {
     disabled: "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all group",
     enabled: "flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium transition-all group",
+};
+
+interface LayoutProps {
+    navItems?: NavItem[];
+    pageHeaders?: Record<string, PageHeader>;
 }
 
-function Layout() {
+function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEADERS }: LayoutProps) {
     const location = useLocation();
-    const pageHeader = PAGE_HEADERS[location.pathname] ?? PAGE_HEADERS["/dashboard"];
+    const cartCount = useCartStore((state) => state.items.length);
+    const pageHeader = pageHeaders[location.pathname] ?? Object.values(pageHeaders)[0];
 
-    return(
+    return (
         <div>
             <input type="checkbox" id="mobile-menu-toggle" className="hidden" />
-        
+
             <div className="sidebar-overlay fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
 
             <div className="flex min-h-screen relative overflow-hidden">
@@ -43,7 +40,7 @@ function Layout() {
                     <nav className="flex-1 py-6 px-4 space-y-1">
                         <div className="px-4 mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider">Main Menu</div>
 
-                        {NAV_ITEMS.map((item) => (
+                        {navItems.map((item) => (
                             <Link
                                 key={item.to}
                                 to={item.to}
@@ -51,8 +48,8 @@ function Layout() {
                             >
                                 <Icon icon={item.icon} width="20" className="group-hover:text-primary transition-colors"></Icon>
                                 {item.label}
-                                {item.badge !== undefined && (
-                                    <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">{item.badge}</span>
+                                {item.showCartBadge && (
+                                    <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">{cartCount}</span>
                                 )}
                             </Link>
                         ))}
@@ -60,7 +57,7 @@ function Layout() {
                 </aside>
 
                 <main className="flex-1 w-full min-w-0 flex flex-col">
-                    
+
                     <header className="h-20 glass sticky top-0 z-30 px-6 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 transition-all">
                         <div className="flex items-center gap-4">
                             <label htmlFor="mobile-menu-toggle" className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
@@ -78,36 +75,31 @@ function Layout() {
                         </div>
 
                         <div className="flex items-center gap-3 sm:gap-6">
-                            <div className="hidden md:flex relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Icon icon="solar:magnifer-linear" className="text-slate-400 group-focus-within:text-primary transition-colors"></Icon>
-                                </div>
-                                <input type="text" placeholder="Search flavor or name..." className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm w-64 focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-slate-700 transition-all outline-none text-slate-600 dark:text-slate-200 placeholder:text-slate-400" />
-                            </div>
-
                             <div className="flex items-center gap-2">
                                 <button className="p-2.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors">
                                     <Icon icon="solar:bell-bing-linear" width="20"></Icon>
                                     <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
                                 </button>
-                                
+
                                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
-                                
-                                <div className="flex items-center gap-3 pl-1 cursor-pointer">
-                                    <img src="" alt="Admin" className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover" />
+
+                                <Link to="/profile" className="flex items-center gap-3 pl-1 cursor-pointer">
+                                    <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm bg-primary/10 text-primary flex items-center justify-center">
+                                        <Icon icon="solar:user-linear" width="18" />
+                                    </div>
                                     <div className="hidden sm:block text-left">
                                         <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">ON AO CJ KY MT</p>
                                         <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wide">DEVELOPER</p>
                                     </div>
                                     <Icon icon="solar:alt-arrow-down-linear" className="text-slate-400 text-xs hidden sm:block"></Icon>
-                                </div>
+                                </Link>
                             </div>
                         </div>
                     </header>
 
-                    
                     <Outlet />
-                    
+
+                    <Footer />
                 </main>
             </div>
         </div>
