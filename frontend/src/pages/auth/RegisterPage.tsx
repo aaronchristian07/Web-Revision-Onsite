@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router"
+import { register } from "../../api/authApi";
+import { useAuthStore } from "../../lib/authStore";
+import { parseApiError } from "../../lib/error";
 
 function RegisterPage() {
     const navigate = useNavigate();
-    
+    const setAuth = useAuthStore((state) => state.setAuth);
+
     const [username, setUsername] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -37,17 +41,19 @@ function RegisterPage() {
         return true;
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (loading) return;
         setLoading(true)
         setError("")
         try {
         if (!validateInputs()) return;
 
-        // todo: register api
-
+        const result = await register({ email, username, password });
+        setAuth(result.user, result.accessToken, result.refreshToken);
         navigate("/dashboard")
 
+        } catch (err) {
+        setError(parseApiError(err));
         } finally {
         setLoading(false)
         }
@@ -112,10 +118,11 @@ function RegisterPage() {
                 </div>
 
                 <button
-                    className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white"
-                    onClick={handleSubmit}
+                    className="w-full bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center  focus:ring-blue-800 text-white disabled:opacity-50"
+                    disabled={loading}
+                    onClick={() => { void handleSubmit(); }}
                 >
-                    Create an account
+                    {loading ? "Creating..." : "Create an account"}
                 </button>
 
                 <div className="text-sm text-center mt-[1.6rem]">Already have an account?

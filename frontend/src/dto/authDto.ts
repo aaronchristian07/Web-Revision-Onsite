@@ -1,17 +1,22 @@
 export interface User {
-    userID: number;
-    username: string
+    userId: string;
     role: string;
-
-    // adjust accordingly
 }
 
 export interface LoginRequest {
-    identifier: string;
+    email: string;
+    username: string;
     password: string;
 }
 
-export interface AuthResponse {
+export interface RegisterRequest {
+    email: string;
+    username: string;
+    password: string;
+}
+
+export interface AuthResult {
     user: User;
     accessToken: string;
+    refreshToken: string;
 }

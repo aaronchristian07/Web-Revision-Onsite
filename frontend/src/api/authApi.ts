@@ -1,26 +1,30 @@
 import axios from "axios";
-import type { AuthResponse, LoginRequest } from "../dto/authDto";
+import type { AuthResult, LoginRequest, RegisterRequest } from "../dto/authDto";
 import { API_BASE_URL } from "../lib/api";
-import { parseApiError } from "../lib/error";
 
-interface LoginApiProps {
-    req: LoginRequest;
-    setError: (error: string) => void;
+// Wire format actually returned by auth-service (snake_case) — mapped below
+// into the camelCase AuthResult the rest of the app works with.
+interface RawAuthResponse {
+    access_token: string;
+    refresh_token: string;
+    user_id: string;
+    role: string;
 }
 
-export const loginApi = async({req, setError}: LoginApiProps): Promise<AuthResponse | null> => {
-    try {
-        const response = await axios.post<AuthResponse>(
-            `${API_BASE_URL}/auth/login`,
-            req
-        )
-        if (response && response.data) {
-            return response.data;
-        }
+function mapAuthResponse(raw: RawAuthResponse): AuthResult {
+    return {
+        user: { userId: raw.user_id, role: raw.role },
+        accessToken: raw.access_token,
+        refreshToken: raw.refresh_token,
+    };
+}
 
-        return null;
-    } catch (err) {
-        setError(parseApiError(err))
-        return null;
-    }
+export async function login(payload: LoginRequest): Promise<AuthResult> {
+    const { data } = await axios.post<RawAuthResponse>(`${API_BASE_URL}/auth/login`, payload);
+    return mapAuthResponse(data);
+}
+
+export async function register(payload: RegisterRequest): Promise<AuthResult> {
+    const { data } = await axios.post<RawAuthResponse>(`${API_BASE_URL}/auth/register`, payload);
+    return mapAuthResponse(data);
 }

@@ -1,10 +1,14 @@
-import { Outlet } from "react-router"
+import { Navigate, Outlet } from "react-router";
+import { useAuthStore } from "../../lib/authStore";
 
 const AdminRoute = () => {
-    // TODO: fase auth nyata — cek role dari authStore/JWT, redirect kalau bukan admin.
-    return (
-        <Outlet />
-    )
-}
+    const role = useAuthStore((state) => state.user?.role);
 
-export default AdminRoute
+    if (role !== "admin") {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <Outlet />;
+};
+
+export default AdminRoute;
