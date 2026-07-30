@@ -1,0 +1,11 @@
+# secrets - commit .env.example instead
+.env
+.env.local
+.env.*.local
+
+# air build artifacts (tmp_dir in .air.toml)
+tmp/
+
+# dependencies / build output
+node_modules/
+dist/

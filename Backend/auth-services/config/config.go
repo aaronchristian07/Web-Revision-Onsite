@@ -22,10 +22,9 @@ type Config struct {
 }
 
 func Load() Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load env file")
-	}
+	// no .env in the container image - compose injects the env directly.
+	// MustEnv below is what actually enforces that the vars are present.
+	_ = godotenv.Load()
 
 	return Config{
 		DBString:   MustEnv("DB_STRING"),
