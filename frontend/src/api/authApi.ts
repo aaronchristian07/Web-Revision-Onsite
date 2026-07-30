@@ -7,6 +7,7 @@ import type {
 } from "../dto/authDto";
 import { API_BASE_URL } from "../lib/api";
 import { parseApiError } from "../lib/error";
+import { useAuthStore } from "../lib/authStore";
 
 interface LoginApiProps {
     req: LoginRequest;
@@ -50,4 +51,9 @@ export const registerApi = async ({ req, setError }: RegisterApiProps): Promise<
         setError(parseApiError(err))
         return null;
     }
+}
+
+export function authHeader() {
+    const token = useAuthStore((s) => s.accessToken);  // subscribe
+    return { Authorization: `Bearer ${token}` };
 }

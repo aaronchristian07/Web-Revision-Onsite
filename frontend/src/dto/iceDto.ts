@@ -6,6 +6,10 @@ export interface CreateIceCreamRequest {
 	image_url       : string
 }
 
+export interface GetIceCreamDetailRequest {
+	ice_cream_id : string
+}
+
 export interface DeleteIceCreamRequest {
 	ice_cream_id : string
 }
