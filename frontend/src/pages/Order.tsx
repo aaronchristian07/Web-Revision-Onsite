@@ -48,7 +48,7 @@ function Order() {
                     >
                         <div className="flex-1 min-w-40">
                             <p className="font-semibold text-slate-800 dark:text-white">{trx.id}</p>
-                            <p className="text-sm text-slate-500">{trx.date}</p>
+                            <p className="text-sm text-slate-500">{trx.date} {trx.time}</p>
                         </div>
                         <p className="text-sm text-slate-500 min-w-32">{trx.items.length} item</p>
                         <p className="font-semibold text-slate-700 dark:text-slate-200 min-w-32">{formatIDR(trx.total)}</p>
@@ -63,7 +63,7 @@ function Order() {
                 {selected && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm text-slate-500">{selected.date}</p>
+                            <p className="text-sm text-slate-500">{selected.date} {selected.time}</p>
                             <StatusBadge status={selected.status} />
                         </div>
 

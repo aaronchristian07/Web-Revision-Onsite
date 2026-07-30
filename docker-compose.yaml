@@ -11,7 +11,7 @@ services:
     networks:
       - onsite-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,20 +57,25 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    image: nginx:1.31.2-alpine
-    container_name: onsite-nginx 
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.97
+    container_name: onsite-seaweed
+    command: "server -s3 -s3.config=/etc/seaweedfs/s3-config.json -dir=/data -master.volumeSizeLimitMB=100"
     ports:
-      - ${NGINX_PORT}:80
+      - "9333:9333"
+      - "8888:8888"
+      - "8333:8333"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - seaweed-data:/data
+      - ./seaweed/s3-config.json:/etc/seaweedfs/s3-config.json:ro
     networks:
-      - onsite-net 
+      - onsite-net
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.11"]
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9333/cluster/status || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   auth-services:
     container_name: onsite-auth
@@ -90,6 +95,10 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       NGINX_PORT: ${NGINX_PORT}
       JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      # source mount is what makes the air hot-reload in Dockerfile.dev useful
+      - ./Backend/auth-services:/app
+      - auth-go-build:/root/.cache/go-build
     ports:
       - 8001:8001
     networks:
@@ -101,13 +110,12 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-      nginx:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:8001/health || exit 1"]
-      timeout: 20s
+      interval: 10s
+      timeout: 5s
       retries: 10
-      interval: 30s
+      start_period: 40s
 
   ice-service:
     container_name: onsite-ice
@@ -123,6 +131,10 @@ services:
       SEAWEED_ACCESS_KEY: ${SEAWEED_ACCESS_KEY}
       SEAWEED_SECRET_KEY: ${SEAWEED_SECRET_KEY}
       SEAWEED_BUCKET: ${SEAWEED_BUCKET}
+    volumes:
+      # source mount is what makes the air hot-reload in Dockerfile.dev useful
+      - ./Backend/ice-service:/app
+      - ice-go-build:/root/.cache/go-build
     ports:
       - ${ICE_SERVICE_PORT}:${ICE_SERVICE_PORT}
     networks:
@@ -132,31 +144,58 @@ services:
         condition: service_healthy
       pgpool:
         condition: service_started
-      nginx:
-        condition: service_healthy
       seaweedfs:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:${ICE_SERVICE_PORT}/health || exit 1"]
-      timeout: 20s
+      interval: 10s
+      timeout: 5s
       retries: 10
-      interval: 30s
+      start_period: 40s
 
-  seaweedfs:
-    image: chrislusf/seaweedfs:latest
-    container_name: onsite-seaweed
-    command: "server -s3 -s3.config=/etc/seaweedfs/s3-config.json -dir=/data -master.volumeSizeLimitMB=100"
-    ports:
-      - "9333:9333"
-      - "8888:8888"
-      - "8333:8333"
+  frontend:
+    container_name: onsite-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: onsite-frontend:latest
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
     volumes:
-      - seaweed-data:/data
-      - ./seaweed/s3-config.json:/etc/seaweedfs/s3-config.json:ro
+      - ./frontend:/app
+      # keep the image's node_modules - don't let the host mount shadow it
+      - frontend-node-modules:/app/node_modules
+    ports:
+      - ${FRONTEND_PORT}:5173
     networks:
       - onsite-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9333/cluster/status || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:5173/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:1.31.2-alpine
+    container_name: onsite-nginx
+    ports:
+      - ${NGINX_PORT}:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - onsite-net
+    # the gateway starts after its upstreams, not before - nginx resolves them
+    # lazily via the docker resolver, so service_started is enough
+    depends_on:
+      auth-services:
+        condition: service_started
+      ice-service:
+        condition: service_started
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -165,8 +204,10 @@ services:
 volumes:
   postgres-master:
   redis:
-  nginx:
   seaweed-data:
+  auth-go-build:
+  ice-go-build:
+  frontend-node-modules:
 
 networks:
   onsite-net:

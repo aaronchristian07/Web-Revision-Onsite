@@ -35,14 +35,15 @@ export interface TransactionLineItem {
 
 export interface Transaction {
     id: string;
-    customerName: string;
+    username: string;
     date: string;
+    time: string;
     status: TransactionStatus;
     items: TransactionLineItem[];
     total: number;
 }
 
-const CUSTOMER_NAMES = ["Alia Putri", "Budi Santoso", "Citra Dewi", "Dimas Aditya", "Eka Wulandari"];
+const USERNAMES = ["alia_putri", "budi_santoso", "citra_dewi", "dimas_aditya", "eka_wulandari"];
 const STATUSES: TransactionStatus[] = ["pending", "processing", "completed", "cancelled"];
 
 function buildDummyTransactions(count: number): Transaction[] {
@@ -58,11 +59,14 @@ function buildDummyTransactions(count: number): Transaction[] {
         ];
         const total = items.reduce((sum, item) => sum + item.qty * item.price, 0);
         const day = String((i % 27) + 1).padStart(2, "0");
+        const hour = String((i * 3) % 24).padStart(2, "0");
+        const minute = String((i * 7) % 60).padStart(2, "0");
 
         transactions.push({
             id: `TRX-${String(1000 + i)}`,
-            customerName: CUSTOMER_NAMES[i % CUSTOMER_NAMES.length],
+            username: USERNAMES[i % USERNAMES.length],
             date: `2026-0${(i % 7) + 1}-${day}`,
+            time: `${hour}:${minute}`,
             status: STATUSES[i % STATUSES.length],
             items,
             total,
