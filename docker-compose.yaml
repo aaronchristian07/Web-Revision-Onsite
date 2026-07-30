@@ -170,7 +170,9 @@ services:
     networks:
       - onsite-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:5173/ >/dev/null || exit 1"]
+      # 127.0.0.1, not localhost: localhost resolves to ::1 in this image and
+      # vite --host 0.0.0.0 binds IPv4 only, so the v6 probe is refused
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5173/ >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
