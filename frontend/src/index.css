@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Light-only for now — no dark mode toggle exists yet, so don't let the
+   OS/browser force a half-styled dark look. Bind Tailwind's dark: variant
+   to a class we never apply; revisit when a real theme toggle is built. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    color-scheme: light;
+}
+
+body {
+    background-color: #ffffff;
+}
+
+@theme {
+    --color-primary: #7747ff;
+    --color-primary-linear: #c026d3;
+}
+
+@utility glass {
+    background-color: rgb(255 255 255 / 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+@utility shadow-glow {
+    box-shadow: 0 0 24px rgb(119 71 255 / 0.35);
+}
