@@ -13,6 +13,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const refreshTokenTTL = 7 * 24 * time.Hour
+
 type authService struct {
 	repo      repository.AuthRepoInterface
 	jwtSecret string
@@ -23,7 +25,7 @@ func NewAuthService(repo repository.AuthRepoInterface, jwtSecret string) AuthSer
 }
 
 func (a *authService) generateAccessToken(userid, email, role string) (string, error) {
-	claims := &jwtClaims{
+	claims := &Claims{
 		Email:  email,
 		UserID: userid,
 		Role:   role,
@@ -86,10 +88,11 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 
 	refreshTokenID := uuid.New().String()
 	refreshToken := &model.RefreshToken{
-		UserID: user.ID,
-		Email:  user.Email,
-		Role:   user.Role,
-		Token:  refreshTokenID,
+		UserID:    user.ID,
+		Email:     user.Email,
+		Role:      user.Role,
+		Token:     refreshTokenID,
+		ExpiresAt: time.Now().Add(refreshTokenTTL),
 	}
 
 	if err := a.repo.SaveRefreshToken(ctx, refreshToken); err != nil {
@@ -105,18 +108,8 @@ func (a *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 }
 
 func (a *authService) ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error) {
-	ParsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.jwtSecret), nil
-	})
-
+	claims, err := ParseAccessToken(token, a.jwtSecret)
 	if err != nil {
-		return &dto.ValidateTokenResponse{
-			Valid: false,
-		}, nil
-	}
-
-	claims, ok := ParsedToken.Claims.(*jwtClaims)
-	if !ok {
 		return &dto.ValidateTokenResponse{
 			Valid: false,
 		}, nil
