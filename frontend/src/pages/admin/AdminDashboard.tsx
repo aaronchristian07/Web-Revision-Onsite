@@ -4,9 +4,10 @@ import IceCreamCard from "../../components/IceCreamCard";
 import IceCreamCardSkeleton from "../../components/IceCreamCardSkeleton";
 import Modal from "../../components/Modal";
 import Pagination from "../../components/Pagination";
-import { fetchIceCreamList } from "../../api/iceCreamApi";
-import { fetchTransactions } from "../../api/transactionApi";
-import type { IceCreamItem, Transaction } from "../../lib/dummyData";
+import { getIceCreamApi } from "../../api/iceCreamApi";
+import { GetOrderStatsApi } from "../../api/transactionApi";
+import type { IceCreamResponse } from "../../dto/iceDto";
+import type { OrderStatsResponse } from "../../dto/paymentDto";
 import { useDebounce } from "../../lib/useDebounce";
 import { formatIDR } from "../../lib/format";
 
@@ -17,11 +18,11 @@ function AdminDashboard() {
     const debouncedKeyword = useDebounce(keyword, 400);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [items, setItems] = useState<IceCreamItem[]>([]);
+    const [items, setItems] = useState<IceCreamResponse[]>([]);
     const [total, setTotal] = useState(0);
-    const [selected, setSelected] = useState<IceCreamItem | null>(null);
-    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-    const [totalVariants, setTotalVariants] = useState(0);
+    const [selected, setSelected] = useState<IceCreamResponse | null>(null);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [stats, setStats] = useState<OrderStatsResponse | null>(null);
 
     // reset to page 1 and re-trigger the loading state whenever the (debounced) search changes
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
@@ -33,10 +34,14 @@ function AdminDashboard() {
 
     useEffect(() => {
         let cancelled = false;
-        fetchIceCreamList({ keyword: debouncedKeyword, page, limit: PAGE_SIZE }).then((result) => {
+        getIceCreamApi({
+            req: { keyword: debouncedKeyword, page, limit: PAGE_SIZE },
+            setError: (msg) => { if (!cancelled) setFetchError(msg); },
+        }).then((result) => {
             if (cancelled) return;
-            setItems(result.items);
-            setTotal(result.total);
+            if (result) setFetchError(null);
+            setItems(result?.items ?? []);
+            setTotal(result?.total ?? 0);
             setLoading(false);
         });
         return () => {
@@ -46,11 +51,11 @@ function AdminDashboard() {
 
     useEffect(() => {
         let cancelled = false;
-        fetchTransactions({ limit: 1000 }).then((result) => {
-            if (!cancelled) setAllTransactions(result.items);
-        });
-        fetchIceCreamList({ limit: 1 }).then((result) => {
-            if (!cancelled) setTotalVariants(result.total);
+        GetOrderStatsApi({
+            setError: (msg) => { if (!cancelled) setFetchError(msg); },
+        }).then((result) => {
+            if (cancelled) return;
+            if (result) setStats(result);
         });
         return () => {
             cancelled = true;
@@ -64,20 +69,17 @@ function AdminDashboard() {
         setPage(nextPage);
     };
 
-    const totalRevenue = allTransactions.filter((t) => t.status === "completed").reduce((sum, t) => sum + t.total, 0);
-    const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
-
-    const stats = [
-        { label: "Transaction Analytics — Revenue", value: formatIDR(totalRevenue), icon: "solar:wallet-money-linear" },
-        { label: "Transaction Analytics — Total", value: allTransactions.length, icon: "solar:bill-list-linear" },
-        { label: "Ice Cream Variants", value: totalVariants, icon: "solar:widget-add-linear" },
-        { label: "Pending Orders", value: pendingCount, icon: "solar:hourglass-linear" },
+    const statCards = [
+        { label: "Transaction Analytics — Revenue", value: formatIDR(stats?.total_revenue ?? 0), icon: "solar:wallet-money-linear" },
+        { label: "Transaction Analytics — Total", value: stats?.total_orders ?? 0, icon: "solar:bill-list-linear" },
+        { label: "Ice Cream Variants", value: total, icon: "solar:widget-add-linear" },
+        { label: "Pending Orders", value: stats?.pending_orders ?? 0, icon: "solar:hourglass-linear" },
     ];
 
     return (
         <div className="flex-1 px-10 py-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {stats.map((stat) => (
+                {statCards.map((stat) => (
                     <div key={stat.label} className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
                             <Icon icon={stat.icon} width="20" />
@@ -100,7 +102,11 @@ function AdminDashboard() {
                 />
             </div>
 
-            {!loading && items.length === 0 && (
+            {fetchError && (
+                <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm">{fetchError}</div>
+            )}
+
+            {!loading && !fetchError && items.length === 0 && (
                 <p className="text-slate-500 py-16 text-center">No ice cream matches &quot;{debouncedKeyword}&quot;.</p>
             )}
 
@@ -109,12 +115,11 @@ function AdminDashboard() {
                     ? Array.from({ length: PAGE_SIZE }).map((_, i) => <IceCreamCardSkeleton key={i} />)
                     : items.map((item) => (
                           <IceCreamCard
-                              key={item.id}
-                              name={item.name}
-                              description={item.description}
-                              price={item.price}
-                              emoji={item.emoji}
-                              image={item.image}
+                              key={item.ice_cream_id}
+                              name={item.ice_cream_name}
+                              description={item.ice_cream_desc}
+                              price={item.ice_cream_price}
+                              image={item.image_url || undefined}
                               onViewDetail={() => setSelected(item)}
                           />
                       ))}
@@ -122,19 +127,19 @@ function AdminDashboard() {
 
             {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
 
-            <Modal open={selected !== null} title={selected?.name ?? ""} onClose={() => setSelected(null)}>
+            <Modal open={selected !== null} title={selected?.ice_cream_name ?? ""} onClose={() => setSelected(null)}>
                 {selected && (
                     <div className="space-y-4">
-                        {selected.image ? (
-                            <img src={selected.image} alt={selected.name} className="w-full h-48 object-cover rounded-xl" />
+                        {selected.image_url ? (
+                            <img src={selected.image_url} alt={selected.ice_cream_name} className="w-full h-48 object-cover rounded-xl" />
                         ) : (
                             <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl">
-                                {selected.emoji}
+                                🍦
                             </div>
                         )}
-                        <p className="text-slate-600 dark:text-slate-300">{selected.description}</p>
-                        <p className="text-sm text-slate-400">Flavor: {selected.flavor}</p>
-                        <p className="text-xl font-bold text-primary">{formatIDR(selected.price)}</p>
+                        <p className="text-slate-600 dark:text-slate-300">{selected.ice_cream_desc}</p>
+                        <p className="text-sm text-slate-400">Flavor: {selected.ice_cream_flavor}</p>
+                        <p className="text-xl font-bold text-primary">{formatIDR(selected.ice_cream_price)}</p>
                     </div>
                 )}
             </Modal>

@@ -129,7 +129,7 @@ func (r *paymentRepo) CreateOrderWithItems(ctx context.Context, order *model.Ord
 		}
 
 		order.TotalPrice = totalPrice
-		order.Status = "PAID"
+		order.Status = "pending"
 
 		if err := tx.Create(order).Error; err != nil {
 			return err
@@ -149,4 +149,86 @@ func (r *paymentRepo) CreateOrderWithItems(ctx context.Context, order *model.Ord
 
 		return nil
 	})
+}
+
+func (r *paymentRepo) buildOrderQuery(ctx context.Context, keyword string, status string, dateFrom string, dateTo string) *gorm.DB {
+	q := r.db.WithContext(ctx).Model(&model.Order{})
+
+	if keyword != "" {
+		like := "%" + keyword + "%"
+		q = q.Where("username ILIKE ? OR id::text ILIKE ?", like, like)
+	}
+	if status != "" {
+		q = q.Where("status = ?", status)
+	}
+	if dateFrom != "" {
+		q = q.Where("created_at >= ?", dateFrom)
+	}
+	if dateTo != "" {
+		q = q.Where("created_at <= ?", dateTo+" 23:59:59")
+	}
+
+	return q
+}
+
+func (r *paymentRepo) ListOrdersByUser(ctx context.Context, userID string, page int, limit int) ([]*model.Order, int64, error) {
+	var total int64
+	if err := r.db.WithContext(ctx).Model(&model.Order{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	var orders []*model.Order
+	err := r.db.WithContext(ctx).
+		Preload("OrderItems").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&orders).Error
+
+	return orders, total, err
+}
+
+func (r *paymentRepo) ListAllOrders(ctx context.Context, keyword string, status string, dateFrom string, dateTo string, page int, limit int) ([]*model.Order, int64, error) {
+	var total int64
+	if err := r.buildOrderQuery(ctx, keyword, status, dateFrom, dateTo).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	var orders []*model.Order
+	err := r.buildOrderQuery(ctx, keyword, status, dateFrom, dateTo).
+		Preload("OrderItems").
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&orders).Error
+
+	return orders, total, err
+}
+
+func (r *paymentRepo) GetOrderByID(ctx context.Context, id string) (*model.Order, error) {
+	var order model.Order
+	err := r.db.WithContext(ctx).Preload("OrderItems").Where("id = ?", id).First(&order).Error
+	return &order, err
+}
+
+func (r *paymentRepo) UpdateOrderStatus(ctx context.Context, id string, status string) error {
+	return r.db.WithContext(ctx).Model(&model.Order{}).Where("id = ?", id).Update("status", status).Error
+}
+
+func (r *paymentRepo) GetOrderStats(ctx context.Context) (totalRevenue int64, totalOrders int64, pendingOrders int64, err error) {
+	if err = r.db.WithContext(ctx).Model(&model.Order{}).Count(&totalOrders).Error; err != nil {
+		return
+	}
+	if err = r.db.WithContext(ctx).Model(&model.Order{}).Where("status = ?", "pending").Count(&pendingOrders).Error; err != nil {
+		return
+	}
+	row := r.db.WithContext(ctx).Model(&model.Order{}).
+		Select("COALESCE(SUM(total_price), 0)").
+		Where("status = ?", "completed").
+		Row()
+	err = row.Scan(&totalRevenue)
+	return
 }

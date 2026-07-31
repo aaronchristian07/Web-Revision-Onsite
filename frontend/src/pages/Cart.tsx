@@ -1,25 +1,72 @@
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { createTransaction } from "../api/transactionApi";
-import { useCartStore } from "../lib/cartStore";
+import { CheckoutCartApi, EmptyCartApi, GetCartApi, UpdateCartItemApi } from "../api/transactionApi";
+import type { CartItemResponse } from "../dto/paymentDto";
 import { formatIDR } from "../lib/format";
 
 function Cart() {
-    const items = useCartStore((state) => state.items);
-    const setQty = useCartStore((state) => state.setQty);
-    const removeItem = useCartStore((state) => state.removeItem);
-    const toggleSelected = useCartStore((state) => state.toggleSelected);
-    const setAllSelected = useCartStore((state) => state.setAllSelected);
-    const clearSelected = useCartStore((state) => state.clearSelected);
-
+    const [items, setItems] = useState<CartItemResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [confirmation, setConfirmation] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [checkingOut, setCheckingOut] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    useEffect(() => {
+        let cancelled = false;
+        GetCartApi({ req: { page: 1, limit: 100 }, setError: (msg) => { if (!cancelled) setFetchError(msg); } }).then((result) => {
+            if (cancelled) return;
+            if (result) setFetchError(null);
+            setItems(result?.items ?? []);
+            setLoading(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [refreshKey]);
+
+    const refresh = () => setRefreshKey((key) => key + 1);
 
     const selectedItems = items.filter((item) => item.selected);
-    const total = selectedItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const total = selectedItems.reduce((sum, item) => sum + item.subtotal, 0);
     const allSelected = items.length > 0 && items.every((item) => item.selected);
+
+    const handleSetQty = async (item: CartItemResponse, qty: number) => {
+        if (qty < 1) return;
+        setError(null);
+        const updated = await UpdateCartItemApi({
+            req: { cart_item_id: item.id, quantity: qty, selected: item.selected },
+            setError,
+        });
+        if (updated) refresh();
+    };
+
+    const handleToggleSelected = async (item: CartItemResponse) => {
+        setError(null);
+        const updated = await UpdateCartItemApi({
+            req: { cart_item_id: item.id, quantity: item.quantity, selected: !item.selected },
+            setError,
+        });
+        if (updated) refresh();
+    };
+
+    const handleSetAllSelected = async (selected: boolean) => {
+        setError(null);
+        await Promise.all(
+            items.map((item) =>
+                UpdateCartItemApi({ req: { cart_item_id: item.id, quantity: item.quantity, selected }, setError })
+            )
+        );
+        refresh();
+    };
+
+    const handleRemove = async (item: CartItemResponse) => {
+        setError(null);
+        const result = await EmptyCartApi({ req: { cart_item_id: item.id }, setError });
+        if (result) refresh();
+    };
 
     const handleCheckout = async () => {
         if (selectedItems.length === 0) {
@@ -30,19 +77,28 @@ function Cart() {
         setError(null);
         setCheckingOut(true);
         try {
-            // TODO: pakai username dari authStore begitu login beneran kepasang (Fase 2)
-            const created = await createTransaction({
-                username: "guest_customer",
-                items: selectedItems.map((item) => ({ iceCreamName: item.name, qty: item.qty, price: item.price })),
+            const result = await CheckoutCartApi({
+                req: { cart_item_ids: selectedItems.map((item) => item.id) },
+                setError,
             });
-            setConfirmation(
-                `Checkout berhasil (${created.id}) untuk ${selectedItems.length} item (${formatIDR(created.total)}). Transaksi ini bisa dicek di halaman Order — masih data mock, belum backend asli.`
-            );
-            clearSelected();
+            if (result) {
+                setConfirmation(
+                    `Checkout berhasil (${result.order_id}) untuk ${selectedItems.length} item (${formatIDR(result.total_price)}).`
+                );
+                refresh();
+            }
         } finally {
             setCheckingOut(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex-1 px-10 py-10">
+                <div className="h-40 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            </div>
+        );
+    }
 
     if (items.length === 0) {
         return (
@@ -50,6 +106,11 @@ function Cart() {
                 {confirmation && (
                     <div className="mb-6 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm max-w-md">
                         {confirmation}
+                    </div>
+                )}
+                {fetchError && (
+                    <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm max-w-md">
+                        {fetchError}
                     </div>
                 )}
                 <Icon icon="solar:bag-cross-linear" width="56" className="text-slate-300 mb-4" />
@@ -81,7 +142,7 @@ function Cart() {
                 <input
                     type="checkbox"
                     checked={allSelected}
-                    onChange={(e) => setAllSelected(e.target.checked)}
+                    onChange={(e) => { void handleSetAllSelected(e.target.checked); }}
                     className="w-4 h-4 accent-primary"
                 />
                 Select all
@@ -96,42 +157,42 @@ function Cart() {
                         <input
                             type="checkbox"
                             checked={item.selected}
-                            onChange={() => toggleSelected(item.id)}
+                            onChange={() => { void handleToggleSelected(item); }}
                             className="w-4 h-4 accent-primary"
-                            aria-label={`Select ${item.name}`}
+                            aria-label={`Select ${item.ice_cream_name}`}
                         />
-                        <div className="text-3xl">{item.emoji}</div>
+                        <div className="text-3xl">🍦</div>
                         <div className="flex-1 min-w-32">
-                            <p className="font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                            <p className="text-sm text-slate-500">{formatIDR(item.price)}</p>
+                            <p className="font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
+                            <p className="text-sm text-slate-500">{formatIDR(item.ice_cream_price)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
-                                onClick={() => setQty(item.id, item.qty - 1)}
+                                onClick={() => { void handleSetQty(item, item.quantity - 1); }}
                                 className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                                aria-label={`Decrease ${item.name} quantity`}
+                                aria-label={`Decrease ${item.ice_cream_name} quantity`}
                             >
                                 -
                             </button>
-                            <span className="w-6 text-center text-sm">{item.qty}</span>
+                            <span className="w-6 text-center text-sm">{item.quantity}</span>
                             <button
                                 type="button"
-                                onClick={() => setQty(item.id, item.qty + 1)}
+                                onClick={() => { void handleSetQty(item, item.quantity + 1); }}
                                 className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                                aria-label={`Increase ${item.name} quantity`}
+                                aria-label={`Increase ${item.ice_cream_name} quantity`}
                             >
                                 +
                             </button>
                         </div>
                         <p className="w-28 text-right font-semibold text-slate-700 dark:text-slate-200">
-                            {formatIDR(item.price * item.qty)}
+                            {formatIDR(item.subtotal)}
                         </p>
                         <button
                             type="button"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => { void handleRemove(item); }}
                             className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                            aria-label={`Remove ${item.name}`}
+                            aria-label={`Remove ${item.ice_cream_name}`}
                         >
                             <Icon icon="solar:trash-bin-trash-linear" width="20" />
                         </button>

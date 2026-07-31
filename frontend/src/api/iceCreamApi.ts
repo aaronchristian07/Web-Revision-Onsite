@@ -1,53 +1,161 @@
-import { SAMPLE_ICE_CREAMS, type IceCreamItem } from "../lib/dummyData";
+import axios from "axios";
+import type {
+    CreateIceCreamRequest,
+    DeleteIceCreamRequest,
+    GetIceCreamDetailRequest,
+    IceCreamResponse,
+    ListIceCreamRequest,
+    ListIceCreamResponse,
+    UpdateIceCreamRequest,
+    MessageResponse,
+} from "../dto/iceDto";
+import { API_BASE_URL } from "../lib/api";
+import { parseApiError } from "../lib/error";
+import { authHeader } from "./authApi";
 
-// Mock data layer — matches the shape of the real ice-service endpoints
-// (GET/POST/PUT/DELETE /ice-cream, POST /ice-cream/image) so that swapping
-// the body of these functions for real axios calls later doesn't require
-// touching any page that calls them.
-
-const MOCK_LATENCY_MS = 500;
-
-let mockIceCreams: IceCreamItem[] = [...SAMPLE_ICE_CREAMS];
-let nextId = mockIceCreams.length + 1;
-
-function delay<T>(value: T, ms = MOCK_LATENCY_MS): Promise<T> {
-    return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+interface GetIceCreamApiProps {
+    req: ListIceCreamRequest;
+    setError: (error: string) => void;
 }
 
-export interface ListIceCreamParams {
-    keyword?: string;
-    page?: number;
-    limit?: number;
+export const getIceCreamApi = async ({ req, setError }: GetIceCreamApiProps): Promise<ListIceCreamResponse | null> => {
+    try {
+        const response = await axios.get<ListIceCreamResponse>(
+            `${API_BASE_URL}/ice-cream`,
+            { params: req }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export interface ListIceCreamResult {
-    items: IceCreamItem[];
-    total: number;
+interface GetIceCreamDetailApiProps {
+    req: GetIceCreamDetailRequest;
+    setError: (error: string) => void;
 }
 
-export async function fetchIceCreamList({ keyword = "", page = 1, limit = 8 }: ListIceCreamParams): Promise<ListIceCreamResult> {
-    const kw = keyword.trim().toLowerCase();
-    const filtered = kw
-        ? mockIceCreams.filter((item) => item.name.toLowerCase().includes(kw) || item.flavor.toLowerCase().includes(kw))
-        : mockIceCreams;
-    const start = (page - 1) * limit;
-    return delay({ items: filtered.slice(start, start + limit), total: filtered.length });
+export const getIceCreamDetailApiApi = async ({ req, setError }: GetIceCreamDetailApiProps): Promise<IceCreamResponse | null> => {
+    try {
+        const response = await axios.get<IceCreamResponse>(
+            `${API_BASE_URL}/ice-cream`,
+            { params: req.ice_cream_id }
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export async function fetchIceCreamDetail(id: string): Promise<IceCreamItem | null> {
-    return delay(mockIceCreams.find((item) => item.id === id) ?? null);
+interface CreateIceCreamApiProps {
+    req: CreateIceCreamRequest;
+    setError: (error: string) => void;
 }
 
-export type CreateIceCreamPayload = Omit<IceCreamItem, "id">;
+export const createIceCreamApi = async ({ req, setError }: CreateIceCreamApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.post<MessageResponse>(
+            `${API_BASE_URL}/ice-cream`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
 
-export async function createIceCream(payload: CreateIceCreamPayload): Promise<IceCreamItem> {
-    const created: IceCreamItem = { id: `ic-${nextId++}`, ...payload };
-    mockIceCreams = [created, ...mockIceCreams];
-    return delay(created);
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }
 
-export async function uploadIceCreamImage(file: File): Promise<{ imageUrl: string }> {
-    // Real endpoint: POST /ice-cream/image (multipart "image") -> { image_url }.
-    // Mocked here with a local object URL so the preview still works offline.
-    return delay({ imageUrl: URL.createObjectURL(file) });
+interface UpdateIceCreamApiProps {
+    req: UpdateIceCreamRequest;
+    setError: (error: string) => void;
+}
+
+export const updateIceCreamApi = async ({ req, setError }: UpdateIceCreamApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.put<MessageResponse>(
+            `${API_BASE_URL}/ice-cream`,
+            req
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface DeleteIceCreamApiProps {
+    req: DeleteIceCreamRequest;
+    setError: (error: string) => void;
+}
+
+export const deleteIceCreamApi = async ({ req, setError }: DeleteIceCreamApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.delete<MessageResponse>(
+            `${API_BASE_URL}/ice-cream`,
+            { data: req}
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
+interface UploadIceCreamApiProps {
+    image: File;
+    setError: (error: string) => void;
+}
+
+export const uploadIceCreamApi = async ({ image, setError }: UploadIceCreamApiProps): Promise<string | null> => {
+    try {
+        const formData = new FormData();
+        formData.append("image", image);
+
+        // backend returns { image_url: "..." }, not a bare string
+        const response = await axios.post<{ image_url: string }>(
+            `${API_BASE_URL}/ice-cream/image`,
+            formData,
+            {
+                headers: {
+                    ...authHeader(),
+                    "Content-Type": "multipart/form-data",
+                },
+                // onUploadProgress: e => {
+                //     if (onProgress && e.total) {
+                //         onProgress(Math.round((e.loaded * 100) / e.total));
+                //     }
+                // },
+            },
+        )
+        if (response && response.data) {
+            return response.data.image_url;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
 }

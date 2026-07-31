@@ -11,4 +11,7 @@ type AuthService interface {
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthResponse, error)
 	ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error)
 	RefreshToken(ctx context.Context, token string) (*dto.AuthResponse, error)
+
+	UpdateProfile(ctx context.Context, userID string, req *dto.UpdateProfileRequest) (*dto.UserResponse, error)
+	UpdateAvatar(ctx context.Context, userID string, avatarURL string) (*dto.UserResponse, error)
 }

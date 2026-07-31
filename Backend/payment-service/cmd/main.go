@@ -43,6 +43,10 @@ func main() {
 		paymentGroup.DELETE("/cart", paymentHandler.RemoveCartItem)
 		paymentGroup.DELETE("/cart/:id", paymentHandler.RemoveCartItem)
 		paymentGroup.POST("/checkout", paymentHandler.Checkout)
+		paymentGroup.GET("/orders", paymentHandler.ListMyOrders)
+		paymentGroup.GET("/admin/orders", paymentHandler.ListAllOrders)
+		paymentGroup.GET("/admin/orders/stats", paymentHandler.GetOrderStats)
+		paymentGroup.PUT("/orders/:id/status", paymentHandler.UpdateOrderStatus)
 	}
 
 	if err := router.Run(":" + cfg.Port); err != nil {

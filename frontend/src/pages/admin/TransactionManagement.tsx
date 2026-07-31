@@ -2,25 +2,33 @@ import { useEffect, useState } from "react";
 import Modal from "../../components/Modal";
 import Pagination from "../../components/Pagination";
 import StatusBadge from "../../components/StatusBadge";
-import { fetchTransactions, updateTransactionStatus } from "../../api/transactionApi";
-import type { Transaction, TransactionStatus } from "../../lib/dummyData";
+import { ListAllOrdersApi, UpdateOrderStatusApi } from "../../api/transactionApi";
+import type { OrderResponse } from "../../dto/paymentDto";
 import { useDebounce } from "../../lib/useDebounce";
 import { formatIDR } from "../../lib/format";
 
 const PAGE_SIZE = 25;
-const STATUS_OPTIONS: TransactionStatus[] = ["pending", "processing", "completed", "cancelled"];
+const STATUS_OPTIONS = ["pending", "processing", "completed", "cancelled"];
+
+function formatDateTime(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return `${d.toLocaleDateString("id-ID")} ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+}
 
 function TransactionManagement() {
     const [keyword, setKeyword] = useState("");
     const debouncedKeyword = useDebounce(keyword, 400);
-    const [status, setStatus] = useState<TransactionStatus | "">("");
+    const [status, setStatus] = useState("");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [orders, setOrders] = useState<OrderResponse[]>([]);
     const [total, setTotal] = useState(0);
-    const [selected, setSelected] = useState<Transaction | null>(null);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [selected, setSelected] = useState<OrderResponse | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // reset to page 1 and re-trigger loading whenever the debounced keyword settles on a new value
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
@@ -32,16 +40,20 @@ function TransactionManagement() {
 
     useEffect(() => {
         let cancelled = false;
-        fetchTransactions({ keyword: debouncedKeyword, status, dateFrom, dateTo, page, limit: PAGE_SIZE }).then((result) => {
+        ListAllOrdersApi({
+            req: { keyword: debouncedKeyword, status, date_from: dateFrom, date_to: dateTo, page, limit: PAGE_SIZE },
+            setError: (msg) => { if (!cancelled) setFetchError(msg); },
+        }).then((result) => {
             if (cancelled) return;
-            setTransactions(result.items);
-            setTotal(result.total);
+            if (result) setFetchError(null);
+            setOrders(result?.items ?? []);
+            setTotal(result?.total ?? 0);
             setLoading(false);
         });
         return () => {
             cancelled = true;
         };
-    }, [debouncedKeyword, status, dateFrom, dateTo, page]);
+    }, [debouncedKeyword, status, dateFrom, dateTo, page, refreshKey]);
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
     const hasActiveFilter = keyword !== "" || status !== "" || dateFrom !== "" || dateTo !== "";
@@ -55,11 +67,9 @@ function TransactionManagement() {
         setPage(1);
     };
 
-    const handleChangeStatus = async (trx: Transaction, newStatus: TransactionStatus) => {
-        const updated = await updateTransactionStatus(trx.id, newStatus);
-        if (!updated) return;
-        setTransactions((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-        setSelected((prev) => (prev && prev.id === updated.id ? updated : prev));
+    const handleChangeStatus = async (order: OrderResponse, newStatus: string) => {
+        const result = await UpdateOrderStatusApi({ orderId: order.id, status: newStatus, setError: setFetchError });
+        if (result) setRefreshKey((k) => k + 1);
     };
 
     return (
@@ -85,7 +95,7 @@ function TransactionManagement() {
                     <select
                         id="tm-status"
                         value={status}
-                        onChange={(e) => { setStatus(e.target.value as TransactionStatus | ""); setLoading(true); setPage(1); }}
+                        onChange={(e) => { setStatus(e.target.value); setLoading(true); setPage(1); }}
                         className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                     >
                         <option value="">All</option>
@@ -128,6 +138,10 @@ function TransactionManagement() {
                 </button>
             </div>
 
+            {fetchError && (
+                <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm">{fetchError}</div>
+            )}
+
             <p className="text-sm text-slate-500 mb-3">{loading ? "Loading..." : `${total} transaction(s) found`}</p>
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
@@ -149,26 +163,26 @@ function TransactionManagement() {
                                     Loading transactions...
                                 </td>
                             </tr>
-                        ) : transactions.length === 0 ? (
+                        ) : orders.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
                                     No transactions match the filter.
                                 </td>
                             </tr>
                         ) : (
-                            transactions.map((trx) => (
-                                <tr key={trx.id} className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">{trx.id}</td>
-                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{trx.username}</td>
-                                    <td className="px-4 py-3 text-slate-500">{trx.date} {trx.time}</td>
-                                    <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{formatIDR(trx.total)}</td>
+                            orders.map((order) => (
+                                <tr key={order.id} className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">#{order.id.slice(0, 8)}</td>
+                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{order.username || "-"}</td>
+                                    <td className="px-4 py-3 text-slate-500">{formatDateTime(order.created_at)}</td>
+                                    <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{formatIDR(order.total_price)}</td>
                                     <td className="px-4 py-3">
-                                        <StatusBadge status={trx.status} />
+                                        <StatusBadge status={order.status} />
                                     </td>
                                     <td className="px-4 py-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelected(trx)}
+                                            onClick={() => setSelected(order)}
                                             className="text-primary text-sm font-medium hover:underline"
                                         >
                                             View
@@ -183,15 +197,15 @@ function TransactionManagement() {
 
             {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 
-            <Modal open={selected !== null} title={selected?.id ?? ""} onClose={() => setSelected(null)}>
+            <Modal open={selected !== null} title={selected ? `#${selected.id.slice(0, 8)}` : ""} onClose={() => setSelected(null)}>
                 {selected && (
                     <div className="space-y-4">
                         <dl className="grid grid-cols-2 gap-y-2 text-sm">
                             <dt className="text-slate-400">Username</dt>
-                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{selected.username}</dd>
+                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{selected.username || "-"}</dd>
 
                             <dt className="text-slate-400">Date &amp; Time</dt>
-                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{selected.date} {selected.time}</dd>
+                            <dd className="text-slate-700 dark:text-slate-200 font-medium">{formatDateTime(selected.created_at)}</dd>
 
                             <dt className="text-slate-400">Transaction State</dt>
                             <dd><StatusBadge status={selected.status} /></dd>
@@ -201,16 +215,16 @@ function TransactionManagement() {
                             {selected.items.map((item, i) => (
                                 <div key={i} className="flex items-center justify-between py-2 text-sm">
                                     <span className="text-slate-700 dark:text-slate-200">
-                                        {item.iceCreamName} x{item.qty}
+                                        {item.ice_cream_name} x{item.quantity}
                                     </span>
-                                    <span className="text-slate-500">{formatIDR(item.price * item.qty)}</span>
+                                    <span className="text-slate-500">{formatIDR(item.subtotal)}</span>
                                 </div>
                             ))}
                         </div>
 
                         <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
                             <span className="font-semibold text-slate-800 dark:text-white">Final Payment Amount</span>
-                            <span className="font-bold text-primary text-lg">{formatIDR(selected.total)}</span>
+                            <span className="font-bold text-primary text-lg">{formatIDR(selected.total_price)}</span>
                         </div>
 
                         <div>
@@ -219,8 +233,8 @@ function TransactionManagement() {
                             </label>
                             <select
                                 id="tm-change-status"
-                                value={selected.status}
-                                onChange={(e) => { void handleChangeStatus(selected, e.target.value as TransactionStatus); }}
+                                value={selected.status.toLowerCase()}
+                                onChange={(e) => { void handleChangeStatus(selected, e.target.value); }}
                                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                             >
                                 {STATUS_OPTIONS.map((s) => (

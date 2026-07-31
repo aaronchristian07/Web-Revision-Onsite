@@ -4,8 +4,9 @@ import IceCreamCard from "../components/IceCreamCard";
 import IceCreamCardSkeleton from "../components/IceCreamCardSkeleton";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
-import { fetchIceCreamList } from "../api/iceCreamApi";
-import type { IceCreamItem } from "../lib/dummyData";
+import { getIceCreamApi } from "../api/iceCreamApi";
+import { AddToCartApi } from "../api/transactionApi";
+import type { IceCreamResponse } from "../dto/iceDto";
 import { useDebounce } from "../lib/useDebounce";
 import { useCartStore } from "../lib/cartStore";
 import { formatIDR } from "../lib/format";
@@ -17,10 +18,12 @@ function Dashboard() {
     const debouncedKeyword = useDebounce(keyword, 400);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [items, setItems] = useState<IceCreamItem[]>([]);
+    const [items, setItems] = useState<IceCreamResponse[]>([]);
     const [total, setTotal] = useState(0);
-    const [selected, setSelected] = useState<IceCreamItem | null>(null);
-    const addItem = useCartStore((state) => state.addItem);
+    const [selected, setSelected] = useState<IceCreamResponse | null>(null);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [cartError, setCartError] = useState<string | null>(null);
+    const addLocalItem = useCartStore((state) => state.addItem);
 
     // reset to page 1 and re-trigger the loading state whenever the (debounced) search changes
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
@@ -32,10 +35,14 @@ function Dashboard() {
 
     useEffect(() => {
         let cancelled = false;
-        fetchIceCreamList({ keyword: debouncedKeyword, page, limit: PAGE_SIZE }).then((result) => {
+        getIceCreamApi({
+            req: { keyword: debouncedKeyword, page, limit: PAGE_SIZE },
+            setError: (msg) => { if (!cancelled) setFetchError(msg); },
+        }).then((result) => {
             if (cancelled) return;
-            setItems(result.items);
-            setTotal(result.total);
+            if (result) setFetchError(null);
+            setItems(result?.items ?? []);
+            setTotal(result?.total ?? 0);
             setLoading(false);
         });
         return () => {
@@ -48,6 +55,23 @@ function Dashboard() {
     const handlePageChange = (nextPage: number) => {
         setLoading(true);
         setPage(nextPage);
+    };
+
+    const handleAddToCart = async (item: IceCreamResponse) => {
+        setCartError(null);
+        const result = await AddToCartApi({
+            req: {
+                ice_cream_id: item.ice_cream_id,
+                ice_cream_name: item.ice_cream_name,
+                ice_cream_price: item.ice_cream_price,
+                quantity: 1,
+            },
+            setError: setCartError,
+        });
+        if (result) {
+            // optimistic local badge count - Cart page fetches the real total separately
+            addLocalItem({ id: item.ice_cream_id, name: item.ice_cream_name, emoji: "🍦", price: item.ice_cream_price });
+        }
     };
 
     return (
@@ -64,7 +88,14 @@ function Dashboard() {
                 />
             </div>
 
-            {!loading && items.length === 0 && (
+            {fetchError && (
+                <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm">{fetchError}</div>
+            )}
+            {cartError && (
+                <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm">{cartError}</div>
+            )}
+
+            {!loading && !fetchError && items.length === 0 && (
                 <p className="text-slate-500 py-16 text-center">No ice cream matches &quot;{debouncedKeyword}&quot;.</p>
             )}
 
@@ -73,37 +104,36 @@ function Dashboard() {
                     ? Array.from({ length: PAGE_SIZE }).map((_, i) => <IceCreamCardSkeleton key={i} />)
                     : items.map((item) => (
                           <IceCreamCard
-                              key={item.id}
-                              name={item.name}
-                              description={item.description}
-                              price={item.price}
-                              emoji={item.emoji}
-                              image={item.image}
+                              key={item.ice_cream_id}
+                              name={item.ice_cream_name}
+                              description={item.ice_cream_desc}
+                              price={item.ice_cream_price}
+                              image={item.image_url || undefined}
                               onViewDetail={() => setSelected(item)}
-                              onAddToCart={() => addItem(item)}
+                              onAddToCart={() => { void handleAddToCart(item); }}
                           />
                       ))}
             </div>
 
             {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
 
-            <Modal open={selected !== null} title={selected?.name ?? ""} onClose={() => setSelected(null)}>
+            <Modal open={selected !== null} title={selected?.ice_cream_name ?? ""} onClose={() => setSelected(null)}>
                 {selected && (
                     <div className="space-y-4">
-                        {selected.image ? (
-                            <img src={selected.image} alt={selected.name} className="w-full h-48 object-cover rounded-xl" />
+                        {selected.image_url ? (
+                            <img src={selected.image_url} alt={selected.ice_cream_name} className="w-full h-48 object-cover rounded-xl" />
                         ) : (
                             <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl">
-                                {selected.emoji}
+                                🍦
                             </div>
                         )}
-                        <p className="text-slate-600 dark:text-slate-300">{selected.description}</p>
-                        <p className="text-sm text-slate-400">Flavor: {selected.flavor}</p>
-                        <p className="text-xl font-bold text-primary">{formatIDR(selected.price)}</p>
+                        <p className="text-slate-600 dark:text-slate-300">{selected.ice_cream_desc}</p>
+                        <p className="text-sm text-slate-400">Flavor: {selected.ice_cream_flavor}</p>
+                        <p className="text-xl font-bold text-primary">{formatIDR(selected.ice_cream_price)}</p>
                         <button
                             type="button"
                             onClick={() => {
-                                addItem(selected);
+                                void handleAddToCart(selected);
                                 setSelected(null);
                             }}
                             className="w-full py-2.5 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"

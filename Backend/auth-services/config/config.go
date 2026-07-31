@@ -19,6 +19,12 @@ type Config struct {
 	RedisPass  string
 	NGINXPort  string
 	JWTSecret  string
+
+	SeaweedEndpoint       string
+	SeaweedPublicEndpoint string
+	SeaweedAccessKey      string
+	SeaweedSecretKey      string
+	SeaweedProfileBucket  string
 }
 
 func Load() Config {
@@ -38,6 +44,12 @@ func Load() Config {
 		RedisPass:  MustEnv("REDIS_PASSWORD"),
 		NGINXPort:  MustEnv("NGINX_PORT"),
 		JWTSecret:  MustEnv("JWT_SECRET"),
+
+		SeaweedEndpoint:       MustEnv("SEAWEED_S3_ENDPOINT"),
+		SeaweedPublicEndpoint: MustEnv("SEAWEED_S3_PUBLIC_ENDPOINT"),
+		SeaweedAccessKey:      MustEnv("SEAWEED_ACCESS_KEY"),
+		SeaweedSecretKey:      MustEnv("SEAWEED_SECRET_KEY"),
+		SeaweedProfileBucket:  MustEnv("SEAWEED_PROFILE_BUCKET"),
 	}
 }
 

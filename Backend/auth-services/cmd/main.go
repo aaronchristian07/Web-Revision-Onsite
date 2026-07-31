@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/config"
@@ -9,6 +10,7 @@ import (
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/model"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/repository"
 	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/service"
+	"github.com/Acad600-TPA/WEB-MT-AO-KY-ON-CJ-261/auth-service/storage"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -45,9 +47,23 @@ func main() {
 	// tokenBlacklist := cache.NewRedisTokenBlacklist(clusterClient)
 	// refreshStore := cache.NewRedisRefreshStore(clusterClient)
 
+	imageStorage, err := storage.NewImageStorage(
+		config.SeaweedEndpoint,
+		config.SeaweedPublicEndpoint,
+		config.SeaweedAccessKey,
+		config.SeaweedSecretKey,
+		config.SeaweedProfileBucket,
+	)
+	if err != nil {
+		log.Fatalf("failed to init image storage: %s", err)
+	}
+	if err := imageStorage.EnsureBucket(context.Background()); err != nil {
+		log.Fatalf("failed to ensure storage bucket: %s", err)
+	}
+
 	authRepo := repository.NewAuthRepo(db)
 	authService := service.NewAuthService(authRepo, config.JWTSecret)
-	authUsecase := http.NewAuthUsecase(authService)
+	authUsecase := http.NewAuthUsecase(authService, imageStorage)
 
 	router := gin.Default()
 	router.GET("/health", func(c *gin.Context) {
@@ -64,6 +80,8 @@ func main() {
 		protected := authGroup.Group("")
 		protected.Use(middleware.AuthMiddleware(config))
 		protected.GET("/me", authUsecase.Me)
+		protected.PUT("/me", authUsecase.UpdateProfile)
+		protected.POST("/me/avatar", authUsecase.UploadAvatar)
 	}
 
 	if err := router.Run(":8001"); err != nil {
