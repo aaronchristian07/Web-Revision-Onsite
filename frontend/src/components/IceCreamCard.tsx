@@ -39,8 +39,8 @@ function IceCreamCard({ name, description, price, image, onViewDetail, onAddToCa
                         <div className="grow">
                             <p className="text-lg">{description}</p>
                         </div>
-                        <div className="flex justify-between items-center mt-auto">
-                            {onAddToCart ? (
+                        <div className="mt-auto">
+                            {onAddToCart && (
                                 <button
                                     type="button"
                                     onClick={onAddToCart}
@@ -48,10 +48,7 @@ function IceCreamCard({ name, description, price, image, onViewDetail, onAddToCa
                                 >
                                     Add to Cart
                                 </button>
-                            ) : (
-                                <span />
                             )}
-                            <span className="text-3xl">✨</span>
                         </div>
                     </div>
                 </div>

@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Light-only for now — no dark mode toggle exists yet, so don't let the
-   OS/browser force a half-styled dark look. Bind Tailwind's dark: variant
-   to a class we never apply; revisit when a real theme toggle is built. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {

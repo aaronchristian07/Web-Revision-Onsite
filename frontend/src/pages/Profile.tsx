@@ -179,7 +179,9 @@ function ProfilePage() {
                             {item.image_url ? (
                                 <img src={item.image_url} alt={item.ice_cream_name} className="w-10 h-10 rounded-lg object-cover" />
                             ) : (
-                                <span className="text-2xl">🍦</span>
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
+                                    {item.ice_cream_name.charAt(0).toUpperCase()}
+                                </div>
                             )}
                             <div>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>

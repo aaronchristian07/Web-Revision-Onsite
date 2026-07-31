@@ -15,11 +15,54 @@ interface LayoutProps {
     pageHeaders?: Record<string, PageHeader>;
 }
 
+interface ProfileMenuProps {
+    isAdmin: boolean;
+    avatarUrl?: string;
+    name: string;
+    role: string;
+}
+
+function ProfileMenu({ isAdmin, avatarUrl, name, role }: ProfileMenuProps) {
+    const avatar = (
+        <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm bg-primary/10 text-primary flex items-center justify-center overflow-hidden">
+            {avatarUrl ? (
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+            ) : (
+                <Icon icon="solar:user-linear" width="18" />
+            )}
+        </div>
+    );
+    const details = (
+        <div className="hidden sm:block text-left">
+            <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">{name}</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wide">{role}</p>
+        </div>
+    );
+
+    if (isAdmin) {
+        return (
+            <div className="flex items-center gap-3 pl-1">
+                {avatar}
+                {details}
+            </div>
+        );
+    }
+
+    return (
+        <Link to="/profile" className="flex items-center gap-3 pl-1 cursor-pointer">
+            {avatar}
+            {details}
+            <Icon icon="solar:alt-arrow-down-linear" className="text-slate-400 text-xs hidden sm:block"></Icon>
+        </Link>
+    );
+}
+
 function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEADERS }: LayoutProps) {
     const location = useLocation();
     const cartCount = useCartStore((state) => state.items.length);
     const user = useAuthStore((state) => state.user);
     const pageHeader = pageHeaders[location.pathname] ?? Object.values(pageHeaders)[0];
+    const isAdmin = user?.role === "admin";
 
     return (
         <div>
@@ -85,20 +128,7 @@ function Layout({ navItems = CUSTOMER_NAV_ITEMS, pageHeaders = CUSTOMER_PAGE_HEA
 
                                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
-                                <Link to="/profile" className="flex items-center gap-3 pl-1 cursor-pointer">
-                                    <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm bg-primary/10 text-primary flex items-center justify-center overflow-hidden">
-                                        {user?.avatarUrl ? (
-                                            <img src={user.avatarUrl} alt={user.username ?? "Profile"} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <Icon icon="solar:user-linear" width="18" />
-                                        )}
-                                    </div>
-                                    <div className="hidden sm:block text-left">
-                                        <p className="text-sm font-semibold text-slate-700 dark:text-white leading-none">{user?.username || user?.email || "Guest"}</p>
-                                        <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wide">{user?.role ?? ""}</p>
-                                    </div>
-                                    <Icon icon="solar:alt-arrow-down-linear" className="text-slate-400 text-xs hidden sm:block"></Icon>
-                                </Link>
+                                <ProfileMenu isAdmin={isAdmin} avatarUrl={user?.avatarUrl} name={user?.username || user?.email || "Guest"} role={user?.role ?? ""} />
                             </div>
                         </div>
                     </header>

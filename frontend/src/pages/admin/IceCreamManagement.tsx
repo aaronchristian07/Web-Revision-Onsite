@@ -188,7 +188,13 @@ function IceCreamManagement() {
                                   key={item.ice_cream_id}
                                   className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                               >
-                                  <span className="text-2xl">🍦</span>
+                                  {item.image_url ? (
+                                      <img src={item.image_url} alt={item.ice_cream_name} className="w-10 h-10 rounded-lg object-cover" />
+                                  ) : (
+                                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
+                                          {item.ice_cream_name.charAt(0).toUpperCase()}
+                                      </div>
+                                  )}
                                   <div className="flex-1">
                                       <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
                                       <p className="text-xs text-slate-500">{item.ice_cream_flavor}</p>

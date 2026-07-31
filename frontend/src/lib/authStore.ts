@@ -18,7 +18,6 @@ export const useAuthStore = create<AuthState>()(
             accessToken: null,
             refreshToken: null,
 
-            // single place the API's snake_case gets translated
             setSession: (res) =>
                 set({
                     user: {
@@ -32,7 +31,6 @@ export const useAuthStore = create<AuthState>()(
                     refreshToken: res.refresh_token,
                 }),
 
-            // merges a partial (e.g. after a profile edit) without touching tokens
             updateUser: (patch) =>
                 set((state) => ({
                     user: state.user ? { ...state.user, ...patch } : state.user,

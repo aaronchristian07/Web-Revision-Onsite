@@ -1,7 +1,3 @@
-// Wire shapes below mirror the Go service exactly (snake_case). They get
-// mapped into the camelCase `User` in authStore so components never see
-// snake_case.
-
 export interface LoginRequest {
     email: string;
     password: string;
@@ -30,8 +26,6 @@ export interface MessageResponse {
 export interface User {
     userId: string;
     role: string;
-    // optional because sessions persisted before login started returning
-    // these still sit in localStorage without them
     email?: string;
     username?: string;
     avatarUrl?: string;

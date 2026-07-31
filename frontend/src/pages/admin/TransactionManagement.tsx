@@ -30,7 +30,6 @@ function TransactionManagement() {
     const [selected, setSelected] = useState<OrderResponse | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    // reset to page 1 and re-trigger loading whenever the debounced keyword settles on a new value
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
     if (debouncedKeyword !== settledKeyword) {
         setSettledKeyword(debouncedKeyword);
