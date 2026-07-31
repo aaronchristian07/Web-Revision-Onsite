@@ -103,10 +103,27 @@ export const UploadAvatarApi = async ({ image, setError }: UploadAvatarApiProps)
     }
 }
 
+interface DeleteAccountApiProps {
+    setError: (error: string) => void;
+}
+
+export const DeleteAccountApi = async ({ setError }: DeleteAccountApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.delete<MessageResponse>(
+            `${API_BASE_URL}/auth/me`
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
 export function authHeader() {
-    // .getState() reads the store directly instead of subscribing - this is
-    // called from plain async functions, not React components, so the hook
-    // form (useAuthStore(...)) would violate the rules of hooks.
     const token = useAuthStore.getState().accessToken;
     return { Authorization: `Bearer ${token}` };
 }

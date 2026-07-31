@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
@@ -17,7 +18,7 @@ import { ADMIN_NAV_ITEMS, ADMIN_PAGE_HEADERS } from "./lib/navConfig";
 const router = createBrowserRouter([
   {
 	  path: "/",
-    element: <Navigate to="/auth/login" replace />,
+    element: <LandingPage />,
   },
   {
 	  path: "/auth",

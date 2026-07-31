@@ -133,7 +133,6 @@ export const uploadIceCreamApi = async ({ image, setError }: UploadIceCreamApiPr
         const formData = new FormData();
         formData.append("image", image);
 
-        // backend returns { image_url: "..." }, not a bare string
         const response = await axios.post<{ image_url: string }>(
             `${API_BASE_URL}/ice-cream/image`,
             formData,
@@ -142,11 +141,6 @@ export const uploadIceCreamApi = async ({ image, setError }: UploadIceCreamApiPr
                     ...authHeader(),
                     "Content-Type": "multipart/form-data",
                 },
-                // onUploadProgress: e => {
-                //     if (onProgress && e.total) {
-                //         onProgress(Math.round((e.loaded * 100) / e.total));
-                //     }
-                // },
             },
         )
         if (response && response.data) {

@@ -70,7 +70,7 @@ function Dashboard() {
         });
         if (result) {
             // optimistic local badge count - Cart page fetches the real total separately
-            addLocalItem({ id: item.ice_cream_id, name: item.ice_cream_name, emoji: "🍦", price: item.ice_cream_price });
+            addLocalItem({ id: item.ice_cream_id, name: item.ice_cream_name, price: item.ice_cream_price });
         }
     };
 
@@ -123,8 +123,8 @@ function Dashboard() {
                         {selected.image_url ? (
                             <img src={selected.image_url} alt={selected.ice_cream_name} className="w-full h-48 object-cover rounded-xl" />
                         ) : (
-                            <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl">
-                                🍦
+                            <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white">
+                                {selected.ice_cream_name.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <p className="text-slate-600 dark:text-slate-300">{selected.ice_cream_desc}</p>

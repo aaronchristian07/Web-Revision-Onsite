@@ -147,6 +147,22 @@ func (a *authUsecase) UploadAvatar(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (a *authUsecase) DeleteAccount(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user_id tidak ditemukan"})
+		return
+	}
+
+	resp, err := a.uc.DeleteAccount(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func (a *authUsecase) RefreshToken(c *gin.Context) {
 	var req *dto.RefreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

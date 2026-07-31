@@ -161,7 +161,9 @@ function Cart() {
                             className="w-4 h-4 accent-primary"
                             aria-label={`Select ${item.ice_cream_name}`}
                         />
-                        <div className="text-3xl">🍦</div>
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold shrink-0">
+                            {item.ice_cream_name.charAt(0).toUpperCase()}
+                        </div>
                         <div className="flex-1 min-w-32">
                             <p className="font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
                             <p className="text-sm text-slate-500">{formatIDR(item.ice_cream_price)}</p>

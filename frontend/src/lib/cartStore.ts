@@ -3,7 +3,6 @@ import { create } from "zustand";
 export interface CartItem {
     id: string;
     name: string;
-    emoji: string;
     price: number;
     qty: number;
     selected: boolean;
@@ -11,7 +10,7 @@ export interface CartItem {
 
 interface CartState {
     items: CartItem[];
-    addItem: (item: { id: string; name: string; emoji: string; price: number }) => void;
+    addItem: (item: { id: string; name: string; price: number }) => void;
     removeItem: (id: string) => void;
     setQty: (id: string, qty: number) => void;
     toggleSelected: (id: string) => void;

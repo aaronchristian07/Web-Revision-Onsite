@@ -24,7 +24,6 @@ function AdminDashboard() {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [stats, setStats] = useState<OrderStatsResponse | null>(null);
 
-    // reset to page 1 and re-trigger the loading state whenever the (debounced) search changes
     const [settledKeyword, setSettledKeyword] = useState(debouncedKeyword);
     if (debouncedKeyword !== settledKeyword) {
         setSettledKeyword(debouncedKeyword);
@@ -70,8 +69,8 @@ function AdminDashboard() {
     };
 
     const statCards = [
-        { label: "Transaction Analytics — Revenue", value: formatIDR(stats?.total_revenue ?? 0), icon: "solar:wallet-money-linear" },
-        { label: "Transaction Analytics — Total", value: stats?.total_orders ?? 0, icon: "solar:bill-list-linear" },
+        { label: "Transaction Analytics - Revenue", value: formatIDR(stats?.total_revenue ?? 0), icon: "solar:wallet-money-linear" },
+        { label: "Transaction Analytics - Total", value: stats?.total_orders ?? 0, icon: "solar:bill-list-linear" },
         { label: "Ice Cream Variants", value: total, icon: "solar:widget-add-linear" },
         { label: "Pending Orders", value: stats?.pending_orders ?? 0, icon: "solar:hourglass-linear" },
     ];
@@ -133,8 +132,8 @@ function AdminDashboard() {
                         {selected.image_url ? (
                             <img src={selected.image_url} alt={selected.ice_cream_name} className="w-full h-48 object-cover rounded-xl" />
                         ) : (
-                            <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl">
-                                🍦
+                            <div className="w-full h-48 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white">
+                                {selected.ice_cream_name.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <p className="text-slate-600 dark:text-slate-300">{selected.ice_cream_desc}</p>

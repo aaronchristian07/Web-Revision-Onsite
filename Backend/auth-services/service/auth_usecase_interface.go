@@ -14,4 +14,5 @@ type AuthService interface {
 
 	UpdateProfile(ctx context.Context, userID string, req *dto.UpdateProfileRequest) (*dto.UserResponse, error)
 	UpdateAvatar(ctx context.Context, userID string, avatarURL string) (*dto.UserResponse, error)
+	DeleteAccount(ctx context.Context, userID string) (*dto.MessageResponse, error)
 }
