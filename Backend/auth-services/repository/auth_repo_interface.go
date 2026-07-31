@@ -9,6 +9,7 @@ import (
 type AuthRepoInterface interface {
 	CreateUser(ctx context.Context, req *model.User) error
 	UpdateUser(ctx context.Context, req *model.User) error
+	DeleteUser(ctx context.Context, id string) error
 
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	FindByID(ctx context.Context, id string) (*model.User, error)
@@ -17,4 +18,5 @@ type AuthRepoInterface interface {
 	SaveRefreshToken(ctx context.Context, token *model.RefreshToken) error
 	FindRefreshToken(ctx context.Context, token string) (*model.RefreshToken, error)
 	DeleteRefreshToken(ctx context.Context, token string) error
+	DeleteRefreshTokensByUserID(ctx context.Context, userID string) error
 }

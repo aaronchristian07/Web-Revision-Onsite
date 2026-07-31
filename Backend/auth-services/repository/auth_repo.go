@@ -23,6 +23,10 @@ func (a *authRepo) UpdateUser(ctx context.Context, req *model.User) error {
 	return a.db.WithContext(ctx).Save(req).Error
 }
 
+func (a *authRepo) DeleteUser(ctx context.Context, id string) error {
+	return a.db.WithContext(ctx).Where("id = ?", id).Delete(&model.User{}).Error
+}
+
 func (a *authRepo) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	err := a.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
@@ -53,4 +57,8 @@ func (a *authRepo) FindRefreshToken(ctx context.Context, token string) (*model.R
 
 func (a *authRepo) DeleteRefreshToken(ctx context.Context, token string) error {
 	return a.db.WithContext(ctx).Where("token = ?", token).Delete(&model.RefreshToken{}).Error
+}
+
+func (a *authRepo) DeleteRefreshTokensByUserID(ctx context.Context, userID string) error {
+	return a.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&model.RefreshToken{}).Error
 }

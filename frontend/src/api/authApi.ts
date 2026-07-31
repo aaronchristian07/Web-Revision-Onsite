@@ -103,6 +103,26 @@ export const UploadAvatarApi = async ({ image, setError }: UploadAvatarApiProps)
     }
 }
 
+interface DeleteAccountApiProps {
+    setError: (error: string) => void;
+}
+
+export const DeleteAccountApi = async ({ setError }: DeleteAccountApiProps): Promise<MessageResponse | null> => {
+    try {
+        const response = await axios.delete<MessageResponse>(
+            `${API_BASE_URL}/auth/me`
+        )
+        if (response && response.data) {
+            return response.data;
+        }
+
+        return null;
+    } catch (err) {
+        setError(parseApiError(err))
+        return null;
+    }
+}
+
 export function authHeader() {
     const token = useAuthStore.getState().accessToken;
     return { Authorization: `Bearer ${token}` };

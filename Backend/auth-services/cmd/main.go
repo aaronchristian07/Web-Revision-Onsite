@@ -82,6 +82,7 @@ func main() {
 		protected.GET("/me", authUsecase.Me)
 		protected.PUT("/me", authUsecase.UpdateProfile)
 		protected.POST("/me/avatar", authUsecase.UploadAvatar)
+		protected.DELETE("/me", authUsecase.DeleteAccount)
 	}
 
 	if err := router.Run(":8001"); err != nil {

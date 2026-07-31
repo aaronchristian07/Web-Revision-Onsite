@@ -206,3 +206,19 @@ func (a *authService) UpdateAvatar(ctx context.Context, userID string, avatarURL
 		AvatarURL: user.AvatarURL,
 	}, nil
 }
+
+func (a *authService) DeleteAccount(ctx context.Context, userID string) (*dto.MessageResponse, error) {
+	if _, err := a.repo.FindByID(ctx, userID); err != nil {
+		return nil, errors.New("user tidak ditemukan")
+	}
+
+	if err := a.repo.DeleteRefreshTokensByUserID(ctx, userID); err != nil {
+		return nil, errors.New("gagal menghapus sesi akun")
+	}
+
+	if err := a.repo.DeleteUser(ctx, userID); err != nil {
+		return nil, errors.New("gagal menghapus akun")
+	}
+
+	return &dto.MessageResponse{Message: "Akun berhasil dihapus"}, nil
+}
