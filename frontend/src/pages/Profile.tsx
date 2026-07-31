@@ -2,8 +2,8 @@ import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { DeleteAccountApi, UpdateProfileApi, UploadAvatarApi } from "../api/authApi";
-import { getIceCreamApi } from "../api/iceCreamApi";
-import type { IceCreamResponse } from "../dto/iceDto";
+import { ListMyOrdersApi } from "../api/transactionApi";
+import type { OrderItemResponse } from "../dto/paymentDto";
 import { formatIDR } from "../lib/format";
 import { useAuthStore } from "../lib/authStore";
 import Modal from "../components/Modal";
@@ -26,18 +26,34 @@ function ProfilePage() {
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const [recentIceCreams, setRecentIceCreams] = useState<IceCreamResponse[]>([]);
+    const [recentIceCreams, setRecentIceCreams] = useState<OrderItemResponse[]>([]);
     const [fetchError, setFetchError] = useState<string | null>(null);
+    const [loadingRecent, setLoadingRecent] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
-        getIceCreamApi({
-            req: { keyword: "", page: 1, limit: 5 },
+        // orders come back newest-first, so flattening their items and
+        // deduping by ice_cream_id gives the 5 most recently *ordered* flavors
+        ListMyOrdersApi({
+            req: { page: 1, limit: 10 },
             setError: (msg) => { if (!cancelled) setFetchError(msg); },
         }).then((result) => {
             if (cancelled) return;
             if (result) setFetchError(null);
-            setRecentIceCreams(result?.items ?? []);
+
+            const seen = new Set<string>();
+            const items: OrderItemResponse[] = [];
+            for (const order of result?.items ?? []) {
+                for (const item of order.items) {
+                    if (seen.has(item.ice_cream_id)) continue;
+                    seen.add(item.ice_cream_id);
+                    items.push(item);
+                    if (items.length >= 5) break;
+                }
+                if (items.length >= 5) break;
+            }
+            setRecentIceCreams(items);
+            setLoadingRecent(false);
         });
         return () => {
             cancelled = true;
@@ -190,19 +206,18 @@ function ProfilePage() {
                 {fetchError && (
                     <p className="text-sm text-red-600 mb-3">{fetchError}</p>
                 )}
+                {!loadingRecent && !fetchError && recentIceCreams.length === 0 && (
+                    <p className="text-sm text-slate-500">You haven&apos;t ordered any ice cream yet.</p>
+                )}
                 <div className="flex flex-wrap gap-4">
                     {recentIceCreams.map((item) => (
                         <div
                             key={item.ice_cream_id}
                             className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                         >
-                            {item.image_url ? (
-                                <img src={item.image_url} alt={item.ice_cream_name} className="w-10 h-10 rounded-lg object-cover" />
-                            ) : (
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-                                    {item.ice_cream_name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
+                                {item.ice_cream_name.charAt(0).toUpperCase()}
+                            </div>
                             <div>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.ice_cream_name}</p>
                                 <p className="text-xs text-slate-500">{formatIDR(item.ice_cream_price)}</p>
